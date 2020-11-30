@@ -1,0 +1,5 @@
+I2C Addresses:
+
+Num	Device	I2C-Address	Function
+U?	INA226	1000000		Power/Current/Voltage Measurement
+U?	MAX7321	1100000		GPIO Expander

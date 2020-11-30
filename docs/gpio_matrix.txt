@@ -1,0 +1,50 @@
+Pin     Label               GPIO    Domain      Function                    New
+-------------------------------------------------------------------------------------
+01      VDDA
+02      LNA_IN
+03      VDD3P3
+04      VDD3P3
+05      SENSOR_VP
+06      SENSOR_CAPP
+07      SENSOR_CAPN
+08      SENSOR_VN
+09      CHIP_PU
+10      VDET_1/GPIO34               Camera      D7                          D5
+11      VDET_2/GPIO35               Camera      D6                          PCLK
+12      32K_XP
+13      32K_XN
+14      GPIO25                      Camera      VSYNC                       D4
+15      GPIO26                      I2C         SDA
+16      GPIO27                      I2C         SCL
+17      MTMS                        Camera      D4                          D0
+18      MTDI                        --
+19      VDD3P3_RTC
+20      MTCK                        Camera      D3                          D3
+21      MTDO                        Camera      D5                          D1
+22      GPIO2                       Camera      MCLK                        D2
+23      GPIO0                       General     Programming Mode
+24      GPIO4                       GSM Uart    RX
+25      GPIO16                      RAM/FLASH   PSRAM_CE
+26      VDD_SDIO
+27      GPIO17                      RAM/FLASH   PSRAM_SCLK
+28      SD_DATA_2                   RAM/FLASH   DATA2
+29      SD_DATA_3                   RAM/FLASH   DATA3
+30      SD_CMD                      RAM/FLASH   SD_CMD
+31      SD_CLK                      RAM/FLASH   SD_CLK
+32      SD_DATA_0                   RAM/FLASH   DATA0
+33      SD_DATA_1                   RAM/FLASH   DATA1
+34      GPIO5                       GSM Uart    TX
+35      GPIO18                      Camera      D1                          VSYNC
+36      GPIO23                      Camera      HSYNC                       HSYNC
+37      VDD3P3_CPU
+38      GPIO19                      Camera      D2                          D7
+39      GPIO22                      Camera      PCLK                        MCLK
+40      U0RXD                       ISP         TX
+41      U0TXD                       ISP         RX
+42      GPIO21                      Camera      D0                          D6
+43      VDDA
+44      XTAL_N
+45      XTAL_P
+46      VDDA
+47      CAP2
+48      CAP1
