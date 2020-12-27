@@ -1939,13 +1939,9 @@ Wire Wire Line
 	10700 4600 10600 4600
 Wire Wire Line
 	10600 4500 10700 4500
-Text GLabel 10700 4500 2    30   Input ~ 0
+Text GLabel 10800 3450 2    30   Input ~ 0
 SD_DATA1
 Text GLabel 10800 3350 2    30   Input ~ 0
-SD_DATA1
-Text GLabel 10800 3450 2    30   Input ~ 0
-SD_DATA0
-Text GLabel 10700 4600 2    30   Input ~ 0
 SD_DATA0
 Text GLabel 9550 4800 0    30   Input ~ 0
 SPICLK
@@ -3087,4 +3083,8 @@ Wire Wire Line
 	10300 6100 10350 6100
 Wire Wire Line
 	10300 5800 10350 5800
+Text GLabel 10700 4500 2    30   Input ~ 0
+SD_DATA0
+Text GLabel 10700 4600 2    30   Input ~ 0
+SD_DATA1
 $EndSCHEMATC
