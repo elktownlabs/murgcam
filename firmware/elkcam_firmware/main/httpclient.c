@@ -221,7 +221,7 @@ esp_err_t send_data(mbedtls_ssl_context* ssl, https_upload_t* content)
 {
 	cJSON *root;
 	root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "firmare", ELKCAM_SW_VERSION);
+    cJSON_AddStringToObject(root, "firmware", ELKCAM_SW_VERSION);
     /* add data from cell module */
     sim800_engineering_data_t sim800_engineering_data;
     if (sim800_get_engineering_data(&sim800_engineering_data) == ESP_OK) {
