@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "config.h": "c",
+        "cellmodem.h": "c",
+        "webserver.h": "c",
+        "esp_modem_dce_service.h": "c"
+    },
+    "cmake.configureOnOpen": false
+}

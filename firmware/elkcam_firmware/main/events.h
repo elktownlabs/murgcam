@@ -1,0 +1,16 @@
+#ifndef _EVENTS_H_
+#define _EVENTS_H_
+
+#include "esp_event.h"
+
+
+ESP_EVENT_DECLARE_BASE(EVENT_BASE);
+
+enum {
+    EVENT_TRANSIENT_SLEEP_COMMAND_RECEIVED,
+    EVENT_TRANSFER_DONE,
+    EVENT_TRANSFER_FAILED
+};
+
+
+#endif
