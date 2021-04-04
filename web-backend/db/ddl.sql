@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS photos (
+        filename TEXT DEFAULT NULL,
+        timestamp INTEGER NOT NULL,
+	error INTEGER NOT NULL DEFAULT 0,
+	meta TEXT DEFAULT NULL,
+        cam_id INTEGER DEFAULT 0
+);
