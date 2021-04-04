@@ -5,6 +5,7 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "config.h"
+#include "configstorage_const.h"
 #include <string.h>
 #include <stdint.h>
 
@@ -73,26 +74,26 @@ static esp_err_t read_cam_config(camera_config_t* data)
     }
     global_err = ESP_OK;
 
-    err = nvs_get_u8(handle, "cam_quality", &data->quality);
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_QUALITY, &data->quality);
     log_read_result(err, &global_err, "Cam Config: quality");
 
-    err = nvs_get_u8(handle, "cam_auto_exposure", &data->auto_exposure);
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_AUTO_EXPOSURE, &data->auto_exposure);
     log_read_result(err, &global_err, "Cam Config: auto exposure");
 
 
-    err = nvs_get_u8(handle, "cam_light_mode", &data->light_mode);
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_LIGHT_MODE, &data->light_mode);
     log_read_result(err, &global_err, "Cam Config: light mode");
 
     data->color_saturation = CAM_DEFAULT_COLOR_SATURATION;
-    err = nvs_get_u8(handle, "cam_color_saturation", &data->color_saturation);
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_COLOR_SATURATION, &data->color_saturation);
     log_read_result(err, &global_err, "Cam Config: color saturation");
 
     data->brightness = CAM_DEFAULT_BRIGHTNESS;
-    err = nvs_get_u8(handle, "cam_brightness", &data->brightness);
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_BRIGHTNESS, &data->brightness);
     log_read_result(err, &global_err, "Cam Config: color saturation");
 
     data->contrast = CAM_DEFAULT_CONTRAST;
-    err = nvs_get_u8(handle, "cam_contrast", &data->contrast);
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_CONTRAST, &data->contrast);
     log_read_result(err, &global_err, "Cam Config: contrast");
 
     nvs_close(handle);
@@ -116,27 +117,27 @@ static esp_err_t write_cam_config(camera_config_t* data)
     global_err = ESP_OK;
 
     if (data->quality > 63) data->quality = 64;
-    err = nvs_set_u8(handle, "cam_quality", data->quality);
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_QUALITY, data->quality);
     log_write_result(err, &global_err, "Cam Config: quality");
 
     if (data->auto_exposure > 4) data->auto_exposure = 4;
-    err = nvs_set_u8(handle, "cam_auto_exposure", data->auto_exposure);
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_AUTO_EXPOSURE, data->auto_exposure);
     log_write_result(err, &global_err, "Cam Config: auto exposure");
 
     if (data->light_mode > 4) data->light_mode = 4;
-    err = nvs_set_u8(handle, "cam_light_mode", data->light_mode);
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_LIGHT_MODE, data->light_mode);
     log_write_result(err, &global_err, "Cam Config: light mode");
 
     if (data->color_saturation > 13) data->color_saturation = 13;
-    err = nvs_set_u8(handle, "cam_color_saturation", data->color_saturation);
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_COLOR_SATURATION, data->color_saturation);
     log_write_result(err, &global_err, "Cam Config: color saturation");
 
     if (data->brightness > 15) data->brightness = 15;
-    err = nvs_set_u8(handle, "cam_brightness", data->brightness);
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_BRIGHTNESS, data->brightness);
     log_write_result(err, &global_err, "Cam Config: color saturation");
 
     if (data->auto_exposure > 4) data->auto_exposure = 4;
-    err = nvs_set_u8(handle, "cam_contrast", data->contrast);
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_CONTRAST, data->contrast);
     log_write_result(err, &global_err, "Cam Config: contrast");
 
     nvs_close(handle);
@@ -156,7 +157,7 @@ static esp_err_t read_cell_config(cell_config_t* data)
     strncpy(data->pin, CAM_CELL_PIN, sizeof(data->pin));
     strncpy(data->apn, CAM_CELL_APN, sizeof(data->apn));
     strncpy(data->apn_user, CAM_CELL_APN_USER, sizeof(data->apn_user));
-    strncpy(data->apn_pass, CAM_CELL_PIN, sizeof(data->apn_pass));
+    strncpy(data->apn_pass, CAM_CELL_APN_PASS, sizeof(data->apn_pass));
     strncpy(data->remote_address, CAM_CELL_REMOTE_ADDRESS, sizeof(data->remote_address));
     strncpy(data->remote_url, CAM_CELL_REMOTE_URL, sizeof(data->remote_url));
     data->apn_auth = CAM_CELL_APN_AUTH;
@@ -170,30 +171,30 @@ static esp_err_t read_cell_config(cell_config_t* data)
     global_err = ESP_OK;
 
     str_length = sizeof(data->pin);
-    err = nvs_get_str(handle, "cell_pin", data->pin, &str_length);
+    err = nvs_get_str(handle, CONFIGSTORAGE_KEY_CELL_PIN, data->pin, &str_length);
     log_read_result(err, &global_err, "Cell Config: PIN");
 
     str_length = sizeof(data->apn);
-    err = nvs_get_str(handle, "cell_apn", data->apn, &str_length);
+    err = nvs_get_str(handle, CONFIGSTORAGE_KEY_CELL_APN, data->apn, &str_length);
     log_read_result(err, &global_err, "Cell Config: APN");
 
     str_length = sizeof(data->apn_user);
-    err = nvs_get_str(handle, "cell_apn_user", data->apn_user, &str_length);
+    err = nvs_get_str(handle, CONFIGSTORAGE_KEY_CELL_APN_USER, data->apn_user, &str_length);
     log_read_result(err, &global_err, "Cell Config: APN user");
 
     str_length = sizeof(data->apn_pass);
-    err = nvs_get_str(handle, "cell_apn_pass", data->apn_pass, &str_length);
+    err = nvs_get_str(handle, CONFIGSTORAGE_KEY_CELL_APN_PASS, data->apn_pass, &str_length);
     log_read_result(err, &global_err, "Cell Config: APN password");
 
-    err = nvs_get_u8(handle, "cam_apn_auth", &data->apn_auth);
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CELL_APN_AUTH, &data->apn_auth);
     log_read_result(err, &global_err, "Cell Config: APN authentication method");
 
     str_length = sizeof(data->remote_address);
-    err = nvs_get_str(handle, "cell_remote_address", data->remote_address, &str_length);
+    err = nvs_get_str(handle, CONFIGSTORAGE_KEY_CELL_REMOTE_ADDRESS, data->remote_address, &str_length);
     log_read_result(err, &global_err, "Cell Config: Remote address");
 
     str_length = sizeof(data->remote_url);
-    err = nvs_get_str(handle, "cell_remote_url", data->remote_url, &str_length);
+    err = nvs_get_str(handle, CONFIGSTORAGE_KEY_CELL_REMOTE_URL, data->remote_url, &str_length);
     log_read_result(err, &global_err, "Cell Config: Remote url");
 
     nvs_close(handle);
@@ -216,25 +217,25 @@ static esp_err_t write_cell_config(cell_config_t* data)
     }
     global_err = ESP_OK;
 
-    err = nvs_set_str(handle, "cell_pin", data->pin);
+    err = nvs_set_str(handle, CONFIGSTORAGE_KEY_CELL_PIN, data->pin);
     log_write_result(err, &global_err, "Cell Config: PIN");
 
-    err = nvs_set_str(handle, "cell_apn", data->apn);
+    err = nvs_set_str(handle, CONFIGSTORAGE_KEY_CELL_APN, data->apn);
     log_write_result(err, &global_err, "Cell Config: APN");
 
-    err = nvs_set_str(handle, "cell_apn_user", data->apn_user);
+    err = nvs_set_str(handle, CONFIGSTORAGE_KEY_CELL_APN_USER, data->apn_user);
     log_write_result(err, &global_err, "Cell Config: APN user");
 
-    err = nvs_set_str(handle, "cell_apn_pass", data->apn_pass);
+    err = nvs_set_str(handle, CONFIGSTORAGE_KEY_CELL_APN_PASS, data->apn_pass);
     log_write_result(err, &global_err, "Cell Config: APN password");
 
-    err = nvs_set_u8(handle, "cam_apn_auth", data->apn_auth);
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CELL_APN_AUTH, data->apn_auth);
     log_write_result(err, &global_err, "Cell Config: APN authentication method");
 
-    err = nvs_set_str(handle, "cell_remote_address", data->remote_address);
+    err = nvs_set_str(handle, CONFIGSTORAGE_KEY_CELL_REMOTE_ADDRESS, data->remote_address);
     log_write_result(err, &global_err, "Cell Config: Remote address");
 
-    err = nvs_set_str(handle, "cell_remote_url", data->remote_url);
+    err = nvs_set_str(handle, CONFIGSTORAGE_KEY_CELL_REMOTE_URL, data->remote_url);
     log_write_result(err, &global_err, "Cell Config: Remote url");
 
     nvs_close(handle);
@@ -261,10 +262,10 @@ static esp_err_t read_system_config(system_config_t* data)
     }
     global_err = ESP_OK;
 
-    err = nvs_get_u16(handle, "sys_t_btw_phts", &data->secs_between_photos);
+    err = nvs_get_u16(handle, CONFIGSTORAGE_KEY_SYS_SECS_BETWEEN_PHOTOS, &data->secs_between_photos);
     log_read_result(err, &global_err, "System Config: secs between photos");
 
-    err = nvs_get_u32(handle, "sys_p_counter", &data->photo_counter);
+    err = nvs_get_u32(handle, CONFIGSTORAGE_KEY_SYS_PHOTO_COUNTER, &data->photo_counter);
     log_read_result(err, &global_err, "System Config: photo counter");
 
     nvs_close(handle);
@@ -287,11 +288,11 @@ static esp_err_t write_system_config(system_config_t* data)
     }
     global_err = ESP_OK;
 
-    err = nvs_set_u16(handle, "sys_t_btw_phts", data->secs_between_photos);
+    err = nvs_set_u16(handle, CONFIGSTORAGE_KEY_SYS_SECS_BETWEEN_PHOTOS, data->secs_between_photos);
     log_write_result(err, &global_err, "System Config: secs between photos");
 
     data->photo_counter = 0;
-    err = nvs_set_u32(handle, "sys_p_counter", data->photo_counter);
+    err = nvs_set_u32(handle, CONFIGSTORAGE_KEY_SYS_PHOTO_COUNTER, data->photo_counter);
     log_write_result(err, &global_err, "System Config: photo counter");
 
     nvs_close(handle);
