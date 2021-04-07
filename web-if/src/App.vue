@@ -7,6 +7,7 @@
     </v-app-bar>
     <v-main v-if="!authenticated">
       <Login @authenticated="onAuthenticated" />
+      <v-layout align-center justify-center>  <span class="font-weight-thin caption" >v0.2</span></v-layout>
     </v-main>
     <v-main v-if="authenticated">
       <v-container class="my-3 mx-auto">
