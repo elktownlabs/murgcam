@@ -12,6 +12,7 @@
                       <v-text-field
                         prepend-icon="mdi-account"
                         label="User"
+                        ref="user"
                         type="text"
                         v-model="loginUser"
                       ></v-text-field>
@@ -26,7 +27,7 @@
                 </v-card-text>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn @click="login" color="primary">Login</v-btn>
+                  <v-btn @click="login" type="submit" color="primary">Login</v-btn>
                 </v-card-actions>
             </v-card>
           </v-flex>
@@ -39,9 +40,9 @@
   import axios from 'axios';
   export default {
     name: "Login",
-  methods: {
-    login: function() {
-      axios.get('https://wwv-schwarzwald.de/webcam/api/authenticate?user='+this.loginUser+'&password='+this.loginPassword)
+    methods: {
+      login: function() {
+        axios.get('https://wwv-schwarzwald.de/webcam/api/authenticate?user='+this.loginUser+'&password='+this.loginPassword)
         .then(response => {
           if (response.data.authenticated) {
             let authdata = {
@@ -54,6 +55,9 @@
           }
         });
     }
+  },
+  mounted() {
+    this.$refs.user.focus()
   },
   data: () => ({
     loginUser: null,

@@ -1,3 +1,5 @@
 module.exports = {
-  publicPath: '/webcam'
+  publicPath: process.env.NODE_ENV === 'production'
+    ? '/webcam'
+    : '/'
 };
