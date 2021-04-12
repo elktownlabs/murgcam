@@ -252,6 +252,7 @@ esp_err_t send_data(mbedtls_ssl_context* ssl, https_upload_t* content)
         cJSON_AddNumberToObject(root, "current_startup", current_on_startup);
         cJSON_AddNumberToObject(root, "power_startup", power_on_startup);
     }
+    cJSON_AddNumberToObject(root, "camera_error", content->error);
 	const char *my_json_string = cJSON_Print(root);
 	ESP_LOGI(TAG, "my_json_string\n%s",my_json_string);
 

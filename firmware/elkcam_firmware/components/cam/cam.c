@@ -67,6 +67,7 @@ typedef struct {
     QueueHandle_t frame_buffer_queue;
     TaskHandle_t task_handle;
     intr_handle_t intr_handle;
+    uint8_t error;
 } cam_obj_t;
 
 static cam_obj_t *cam_obj = NULL;
@@ -397,12 +398,18 @@ static void cam_task(void *arg)
     }
 }
 
-size_t cam_take(uint8_t **buffer_p)
+size_t cam_take(uint8_t **buffer_p, TickType_t delay)
 {
     frame_buffer_event_t frame_buffer_event;
-    xQueueReceive(cam_obj->frame_buffer_queue, (void *)&frame_buffer_event, portMAX_DELAY);
+    BaseType_t res = xQueueReceive(cam_obj->frame_buffer_queue, (void *)&frame_buffer_event, delay);
     *buffer_p = frame_buffer_event.frame_buffer;
-    return frame_buffer_event.len;
+    if (res == pdTRUE) {
+        cam_obj->error = 0;
+        return frame_buffer_event.len;
+    } else {
+        cam_obj->error = 1;
+        return 0;
+    }
 }
 
 void cam_give(uint8_t *buffer)

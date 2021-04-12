@@ -135,26 +135,39 @@ void app_main(void)
     /* create the semaphore for waiting until upload to server is complete */
     sm_uploadeComplete = xSemaphoreCreateBinary();
 
-    ESP_LOGI(TAG, "Starting up in regular single picture mode");
-    init_cam();
+    /* try five times to take a picture */
+    for (int i=0; i<5; i++) {
+        ESP_LOGI(TAG, "Starting up in regular single picture mode");
+        init_cam();
 
-    switch_led(CAM_LED_BLUE, 1);
-    ESP_LOGI(TAG, "Taking picture");
-    camhandler_load_config_from_nvs();
-    cam_start();
-    upload_data.buflen = cam_take(&upload_data.bufptr);
-    /* find end of jpeg stream and truncate data there */
-    for (uint32_t i=0; i<upload_data.buflen-1; i++) {
-        if (upload_data.bufptr[i] == 0xff && upload_data.bufptr[i+1] == 0xd9) {
-            ESP_LOGI(TAG, "Shortened data from %d to %d.", upload_data.buflen, i+2);
-            upload_data.buflen = i+2;
-            break;
+        ESP_LOGI(TAG, "Taking picture");
+        camhandler_load_config_from_nvs();
+        switch_led(CAM_LED_BLUE, 1);
+        cam_start();
+        upload_data.buflen = cam_take(&upload_data.bufptr, 5000 / portTICK_PERIOD_MS);
+        if (upload_data.buflen == 0) {
+            ESP_LOGE(TAG, "Camera timed out");
+            upload_data.error = 1;
+        }  else {
+            /* find end of jpeg stream and truncate data there */
+            for (uint32_t i=0; i<upload_data.buflen-1; i++) {
+                if (upload_data.bufptr[i] == 0xff && upload_data.bufptr[i+1] == 0xd9) {
+                    ESP_LOGI(TAG, "Shortened data from %d to %d.", upload_data.buflen, i+2);
+                    upload_data.buflen = i+2;
+                    break;
+                }
+            }
+            upload_data.error = 0;
+            ESP_LOGI(TAG, "Picture taken. Size = %d", upload_data.buflen);
         }
+        switch_led(CAM_LED_BLUE, 0);
+        ESP_LOGI(TAG, "Shutting down and switching off camera");
+        cam_stop();
+        shutdown_cam();
+        /* if picture was taken successfully, end the loop */
+        if (upload_data.error == 0) break;
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
-    ESP_LOGI(TAG, "Picture taken. Size = %d", upload_data.buflen);
-    switch_led(CAM_LED_BLUE, 0);
-    cam_stop();
-    shutdown_cam();
 
     /* increase photo counter */
     system_config_t sys_conf = *(config_system());
@@ -179,12 +192,17 @@ void app_main(void)
     ESP_LOGI(TAG, "Init modem");
     init_cellmodem();
 
+    int uploadFinished = 0;
     for (int i=0; i<120; i++) {
         /* wait until upload to server is done */
         if( xSemaphoreTake(sm_uploadeComplete, 1000 / portTICK_PERIOD_MS) == pdTRUE ) {
             ESP_LOGI(TAG, "Upload has finished. Shutting everything down.");
+            uploadFinished = 1;
             break;
         }
+    }
+    if (!uploadFinished) {
+        ESP_LOGI(TAG, "Unable to upload. Something went wrong with the modem");
     }
     /* deinitialize stuff */
     cam_give(upload_data.bufptr);

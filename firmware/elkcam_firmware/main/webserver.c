@@ -30,7 +30,7 @@ static esp_err_t hello_get_handler(httpd_req_t *req)
     ESP_LOGI(TAG, "Taking picture");
     camhandler_load_config_from_nvs();
     cam_start();
-    size_t data_len = cam_take(&cam_buf);
+    size_t data_len = cam_take(&cam_buf, portMAX_DELAY);
     ESP_LOGI(TAG, "Picture taken. Size = %d", data_len);
 
     /* Set some custom headers */
