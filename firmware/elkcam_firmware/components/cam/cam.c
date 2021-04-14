@@ -321,7 +321,6 @@ static void cam_task(void *arg)
                         cam_vsync_intr_enable(0);
                         state = CAM_STATE_READ_BUF2;
                     }
-
                     cam_obj->cnt = 0;
                 }
             }
@@ -420,6 +419,7 @@ void cam_give(uint8_t *buffer)
         cam_obj->frame2_buffer_en = 1;
     }
 }
+
 
 void cam_dma_config(const cam_config_t *config)
 {

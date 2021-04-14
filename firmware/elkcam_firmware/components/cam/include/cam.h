@@ -70,7 +70,7 @@ void cam_stop(void);
  * 
  * @return - len of buffer
  */
-size_t cam_take(uint8_t **buffer_p);
+size_t cam_take(uint8_t **buffer_p, TickType_t delay);
 
 /**
  * @brief enable frame buffer to get the next frame data.
@@ -97,6 +97,7 @@ esp_err_t cam_init(const cam_config_t *config);
  *           ESP_FAIL: Delete fails
  */
 esp_err_t cam_deinit(void);
+
 
 #ifdef __cplusplus
 }
