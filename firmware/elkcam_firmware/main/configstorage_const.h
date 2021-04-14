@@ -44,10 +44,10 @@
 #define CONFIGSTORAGE_KEY_CELL_APN_AUTH "cell_apn_auth"
 
 /* remote host name, sent in http host reader, string */
-#define CONFIGSTORAGE_KEY_CELL_REMOTE_ADDRESS "cell_remote_addr"
+#define CONFIGSTORAGE_KEY_CELL_REMOTE_ADDRESS "cell_rem_adr"
 
 /* complete remote url, used to access the upload facility, string */
-#define CONFIGSTORAGE_KEY_CELL_REMOTE_URL "cell_remote_url"
+#define CONFIGSTORAGE_KEY_CELL_REMOTE_URL "cell_rem_url"
 
 /* default time between photos in seconds. Can be temporarily overwritten */
 /* by server, integer */

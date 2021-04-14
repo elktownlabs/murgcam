@@ -356,7 +356,7 @@ void config_write_values(system_config_t* sys_conf, cell_config_t* cell_conf, ca
                 ESP_LOGE(TAG, "Unable to write system configuration to nvs (%s).", esp_err_to_name(err));
             }
         } else {
-            ESP_LOGD(TAG, "System configuration has not changed.");
+            ESP_LOGI(TAG, "System configuration has not changed.");
         }
     }
     /* compare cell config */
@@ -368,7 +368,7 @@ void config_write_values(system_config_t* sys_conf, cell_config_t* cell_conf, ca
                 ESP_LOGE(TAG, "Unable to write cell configuration to nvs (%s).", esp_err_to_name(err));
             }
         } else {
-            ESP_LOGD(TAG, "Cell configuration has not changed.");
+            ESP_LOGI(TAG, "Cell configuration has not changed.");
         }
     }
     /* compare cell config */
@@ -380,7 +380,7 @@ void config_write_values(system_config_t* sys_conf, cell_config_t* cell_conf, ca
                 ESP_LOGE(TAG, "Unable to write cam configuration to nvs (%s).", esp_err_to_name(err));
             }
         } else {
-            ESP_LOGD(TAG, "Cam configuration has not changed.");
+            ESP_LOGI(TAG, "Cam configuration has not changed.");
         }
     }
 }
