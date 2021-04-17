@@ -23,6 +23,14 @@
 /* 0: -2, 1: -1, 2:  0, 3: +1, 4: +2 */
 #define CONFIGSTORAGE_KEY_CAM_CONTRAST "cam_contrast"
 
+/* camera contrast, integer 0 - 4 */
+/* 0: -2, 1: -1, 2:  0, 3: +1, 4: +2 */
+#define CONFIGSTORAGE_KEY_CAM_HUE "cam_hue"
+
+/* camera contrast, integer 0 - 4 */
+/* 0: -2, 1: -1, 2:  0, 3: +1, 4: +2 */
+#define CONFIGSTORAGE_KEY_CAM_SHARPNESS "cam_sharpness"
+
 /* cell phone pin, string */
 /* can be set to an arbitary string if no pin is required by sim */
 #define CONFIGSTORAGE_KEY_CELL_PIN "cell_pin"

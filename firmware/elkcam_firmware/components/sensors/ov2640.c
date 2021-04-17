@@ -200,63 +200,671 @@ void OV2640_Light_Mode(uint8_t mode)
     SCCB_Write(SCCB_ID ,0XCE, regceval);
 }
 
-void OV2640_Color_Saturation(uint8_t sat)
-{
-    uint8_t reg7dval = ((sat + 2) << 4) | 0X08;
-    SCCB_Write(SCCB_ID ,0XFF, 0X00);
-    SCCB_Write(SCCB_ID ,0X7C, 0X00);
-    SCCB_Write(SCCB_ID ,0X7D, 0X02);
-    SCCB_Write(SCCB_ID ,0X7C, 0X03);
-    SCCB_Write(SCCB_ID ,0X7D, reg7dval);
-    SCCB_Write(SCCB_ID ,0X7D, reg7dval);
-}
 
-void OV2640_Brightness(uint8_t bright)
+const static uint8_t OV2640_CONTRAST_DISABLE[]=
 {
-    SCCB_Write(SCCB_ID ,0xff, 0x00);
-    SCCB_Write(SCCB_ID ,0x7c, 0x00);
-    SCCB_Write(SCCB_ID ,0x7d, 0x04);
-    SCCB_Write(SCCB_ID ,0x7c, 0x09);
-    SCCB_Write(SCCB_ID ,0x7d, bright << 4);
-    SCCB_Write(SCCB_ID ,0x7d, 0x00);
+    0xFF,   0x00,   0xff,
+    0x7C,   0x00,   0xff,
+    0x7D,   0x00,   0x04,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_CONTRAST_ENABLE[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x00,   0xff,
+    0x7D,   0x04,   0x04,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_CONTRAST_LEVEL0[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x10,   0xff,
+    0x7D,   0x4a,   0xff,
+    0x7D,   0x06,   0x0c,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_CONTRAST_LEVEL1[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x14,   0xff,
+    0x7D,   0x40,   0xff,
+    0x7D,   0x06,   0x0c,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_CONTRAST_LEVEL2[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x18,   0xff,
+    0x7D,   0x34,   0xff,
+    0x7D,   0x06,   0x0c,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_CONTRAST_LEVEL3[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x1c,   0xff,
+    0x7D,   0x2a,   0xff,
+    0x7D,   0x06,   0x0c,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_CONTRAST_LEVEL4[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x06,   0x0c,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_CONTRAST_LEVEL5[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x24,   0xff,
+    0x7D,   0x16,   0xff,
+    0x7D,   0x06,   0x0c,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_CONTRAST_LEVEL6[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x28,   0xff,
+    0x7D,   0x0c,   0xff,
+    0x7D,   0x06,   0x0c,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_CONTRAST_LEVEL7[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x2c,   0xff,
+    0x7D,   0x02,   0xff,
+    0x7D,   0x06,   0x0c,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_CONTRAST_LEVEL8[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x07,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x30,   0xff,
+    0x7D,   0x08,   0xff,
+    0x7D,   0x0e,   0x0c,
+    0x00,   0x00,   0x00
+};
+
+
+void pass_data(const uint8_t* data)
+{
+    while (*data) {
+        if (data[2] == 0xff) {
+            /* if all bits are to be written we do not need to read first */
+            SCCB_Write(SCCB_ID, data[0], data[1]);
+            ESP_LOGI(TAG, "Set %u to %u", data[0], data[1]);
+        } else {
+            /* read, modify and write */
+            uint8_t reg = SCCB_Read(SCCB_ID, data[0]);
+            uint8_t value = data[1];
+            reg &= (~data[2]);
+            value &= data[2];
+            value |= reg;
+            SCCB_Write(SCCB_ID, data[0], value);
+            ESP_LOGI(TAG, "Set %u to %u", data[0], value);
+        }
+
+        /* move ahead to next data triple */
+        data+=3;
+    }
 }
 
 void OV2640_Contrast(uint8_t contrast)
 {
-    uint8_t reg7d0val = 0X20; /*!< Default to normal mode */
-    uint8_t reg7d1val = 0X20;
-
     switch (contrast) {
-        case 0:/*!< -2 */
-            reg7d0val = 0X18;
-            reg7d1val = 0X34;
+        case 1:
+            pass_data(OV2640_CONTRAST_LEVEL0);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        case 2:
+            pass_data(OV2640_CONTRAST_LEVEL1);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        case 3:
+            pass_data(OV2640_CONTRAST_LEVEL2);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        case 4:
+            pass_data(OV2640_CONTRAST_LEVEL3);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        case 5:
+            pass_data(OV2640_CONTRAST_LEVEL4);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        case 6:
+            pass_data(OV2640_CONTRAST_LEVEL5);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        case 7:
+            pass_data(OV2640_CONTRAST_LEVEL6);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        case 8:
+            pass_data(OV2640_CONTRAST_LEVEL7);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        case 9:
+            pass_data(OV2640_CONTRAST_LEVEL8);
+            pass_data(OV2640_CONTRAST_ENABLE);
+            break;
+        default: /* normally set with 0, but also fallback for invalid values */
+            pass_data(OV2640_CONTRAST_DISABLE);
             break;
 
-        case 1:/*!< -1 */
-            reg7d0val = 0X1C;
-            reg7d1val = 0X2A;
-            break;
-
-        case 3:/*!< 1 */
-            reg7d0val = 0X24;
-            reg7d1val = 0X16;
-            break;
-
-        case 4:/*!< 2 */
-            reg7d0val = 0X28;
-            reg7d1val = 0X0C;
-            break;
     }
-
-    SCCB_Write(SCCB_ID ,0xff, 0x00);
-    SCCB_Write(SCCB_ID ,0x7c, 0x00);
-    SCCB_Write(SCCB_ID ,0x7d, 0x04);
-    SCCB_Write(SCCB_ID ,0x7c, 0x07);
-    SCCB_Write(SCCB_ID ,0x7d, 0x20);
-    SCCB_Write(SCCB_ID ,0x7d, reg7d0val);
-    SCCB_Write(SCCB_ID ,0x7d, reg7d1val);
-    SCCB_Write(SCCB_ID ,0x7d, 0x06);
 }
+
+
+const static uint8_t OV2640_SATURATION_DISABLE[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x00,   0xff,
+    0x7D,   0x00,   0x02,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SATURATION_ENABLE[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x00,   0xff,
+    0x7D,   0x02,   0x02,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SATURATION_LEVEL0[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x00,   0xff,
+    0x7D,   0x00,   0xff,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SATURATION_LEVEL1[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x10,   0xff,
+    0x7D,   0x10,   0xff,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SATURATION_LEVEL2[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x20,   0xff,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_SATURATION_LEVEL3[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x30,   0xff,
+    0x7D,   0x30,   0xff,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SATURATION_LEVEL4[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x40,   0xff,
+    0x7D,   0x40,   0xff,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_SATURATION_LEVEL5[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x50,   0xff,
+    0x7D,   0x50,   0xff,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SATURATION_LEVEL6[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x60,   0xff,
+    0x7D,   0x60,   0xff,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SATURATION_LEVEL7[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x70,   0xff,
+    0x7D,   0x70,   0xff,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SATURATION_LEVEL8[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x03,   0xff,
+    0x7D,   0x80,   0xff,
+    0x7D,   0x80,   0xff,
+    0x00,   0x00,   0x00
+};
+
+
+void OV2640_Color_Saturation(uint8_t sat)
+{
+    switch (sat) {
+        case 1:
+            pass_data(OV2640_SATURATION_LEVEL0);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        case 2:
+            pass_data(OV2640_SATURATION_LEVEL1);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        case 3:
+            pass_data(OV2640_SATURATION_LEVEL2);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        case 4:
+            pass_data(OV2640_SATURATION_LEVEL3);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        case 5:
+            pass_data(OV2640_SATURATION_LEVEL4);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        case 6:
+            pass_data(OV2640_SATURATION_LEVEL5);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        case 7:
+            pass_data(OV2640_SATURATION_LEVEL6);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        case 8:
+            pass_data(OV2640_SATURATION_LEVEL7);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        case 9:
+            pass_data(OV2640_SATURATION_LEVEL8);
+            pass_data(OV2640_SATURATION_ENABLE);
+            break;
+        default: /* normally set with 0, but also fallback for invalid values */
+            pass_data(OV2640_SATURATION_DISABLE);
+            break;
+
+    }
+}
+
+
+const static uint8_t OV2640_BRIGHTNESS_DISABLE[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x00,   0xff,
+    0x7D,   0x00,   0x04,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_BRIGHTNESS_ENABLE[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x00,   0xff,
+    0x7D,   0x04,   0x04,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_BRIGHTNESS_LEVEL0[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x08,   0x08,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_BRIGHTNESS_LEVEL1[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x10,   0xff,
+    0x7D,   0x08,   0x08,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_BRIGHTNESS_LEVEL2[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x00,   0xff,
+    0x7D,   0x00,   0x08,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_BRIGHTNESS_LEVEL3[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x10,   0xff,
+    0x7D,   0x00,   0x08,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_BRIGHTNESS_LEVEL4[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x20,   0xff,
+    0x7D,   0x00,   0x08,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_BRIGHTNESS_LEVEL5[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x30,   0xff,
+    0x7D,   0x00,   0x08,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_BRIGHTNESS_LEVEL6[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x40,   0xff,
+    0x7D,   0x00,   0x08,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_BRIGHTNESS_LEVEL7[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x50,   0xff,
+    0x7D,   0x00,   0x08,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_BRIGHTNESS_LEVEL8[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x09,   0xff,
+    0x7D,   0x60,   0xff,
+    0x7D,   0x00,   0x08,
+    0x00,   0x00,   0x00
+};
+
+
+void OV2640_Brightness(uint8_t sat)
+{
+    switch (sat) {
+        case 1:
+            pass_data(OV2640_BRIGHTNESS_LEVEL0);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        case 2:
+            pass_data(OV2640_BRIGHTNESS_LEVEL1);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        case 3:
+            pass_data(OV2640_BRIGHTNESS_LEVEL2);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        case 4:
+            pass_data(OV2640_BRIGHTNESS_LEVEL3);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        case 5:
+            pass_data(OV2640_BRIGHTNESS_LEVEL4);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        case 6:
+            pass_data(OV2640_BRIGHTNESS_LEVEL5);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        case 7:
+            pass_data(OV2640_BRIGHTNESS_LEVEL6);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        case 8:
+            pass_data(OV2640_BRIGHTNESS_LEVEL7);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        case 9:
+            pass_data(OV2640_BRIGHTNESS_LEVEL8);
+            pass_data(OV2640_BRIGHTNESS_ENABLE);
+            break;
+        default: /* normally set with 0, but also fallback for invalid values */
+            pass_data(OV2640_BRIGHTNESS_DISABLE);
+            break;
+
+    }
+}
+
+
+const static uint8_t OV2640_HUE_DISABLE[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x00,   0xff,
+    0x7D,   0x00,   0x01,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_HUE_ENABLE[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x00,   0xff,
+    0x7D,   0x01,   0x01,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_HUE_LEVEL0[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x01,   0xff,
+    0x7D,   0x40,   0xff,
+    0x7D,   0x6F,   0xff,
+    0x7C,   0x0A,   0xff,
+    0x7D,   0x05,   0x03,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_HUE_LEVEL1[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x01,   0xff,
+    0x7D,   0x6F,   0xff,
+    0x7D,   0x40,   0xff,
+    0x7C,   0x0A,   0xff,
+    0x7D,   0x05,   0x03,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_HUE_LEVEL2[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x01,   0xff,
+    0x7D,   0x80,   0xff,
+    0x7D,   0x00,   0xff,
+    0x7C,   0x0A,   0xff,
+    0x7D,   0x06,   0x03,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_HUE_LEVEL3[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x01,   0xff,
+    0x7D,   0x6F,   0xff,
+    0x7D,   0x40,   0xff,
+    0x7C,   0x0A,   0xff,
+    0x7D,   0x06,   0x03,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_HUE_LEVEL4[]=
+{
+    0xFF,   0x00,   0xff,
+    0x7C,   0x01,   0xff,
+    0x7D,   0x40,   0xff,
+    0x7D,   0x6F,   0xff,
+    0x7C,   0x0A,   0xff,
+    0x7D,   0x06,   0x03,
+    0x00,   0x00,   0x00
+};
+
+
+void OV2640_Hue(uint8_t hue)
+{
+    switch (hue) {
+        case 1:
+            pass_data(OV2640_HUE_LEVEL0);
+            pass_data(OV2640_HUE_ENABLE);
+            break;
+        case 2:
+            pass_data(OV2640_HUE_LEVEL1);
+            pass_data(OV2640_HUE_ENABLE);
+            break;
+        case 3:
+            pass_data(OV2640_HUE_LEVEL2);
+            pass_data(OV2640_HUE_ENABLE);
+            break;
+        case 4:
+            pass_data(OV2640_HUE_LEVEL3);
+            pass_data(OV2640_HUE_ENABLE);
+            break;
+        case 5:
+            pass_data(OV2640_HUE_LEVEL4);
+            pass_data(OV2640_HUE_ENABLE);
+            break;
+        default: /* normally set with 0, but also fallback for invalid values */
+            pass_data(OV2640_HUE_DISABLE);
+            break;
+
+    }
+}
+
+
+const static uint8_t OV2640_SHARPNESS_AUTO[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0x20,   0x20,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SHARPNESS_MANUAL[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0x00,   0x20,
+    0x00,   0x00,   0x00
+};
+
+const static uint8_t OV2640_SHARPNESS_LEVEL0[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0xc0,   0x1f,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_SHARPNESS_LEVEL1[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0xc1,   0x1f,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_SHARPNESS_LEVEL2[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0xc2,   0x1f,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_SHARPNESS_LEVEL3[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0xc4,   0x1f,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_SHARPNESS_LEVEL4[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0xc8,   0x1f,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_SHARPNESS_LEVEL5[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0xd0,   0x1f,
+    0x00,   0x00,   0x00
+};
+const static uint8_t OV2640_SHARPNESS_LEVEL6[]=
+{
+    0xFF,   0x00,   0xff,
+    0x92,   0x01,   0xff,
+    0x93,   0xdf,   0x1f,
+    0x00,   0x00,   0x00
+};
+
+void OV2640_Sharpness(uint8_t sharpness)
+{
+    switch (sharpness) {
+        case 1:
+            pass_data(OV2640_SHARPNESS_LEVEL0);
+            pass_data(OV2640_SHARPNESS_MANUAL);
+            break;
+        case 2:
+            pass_data(OV2640_SHARPNESS_LEVEL1);
+            pass_data(OV2640_SHARPNESS_MANUAL);
+            break;
+        case 3:
+            pass_data(OV2640_SHARPNESS_LEVEL2);
+            pass_data(OV2640_SHARPNESS_MANUAL);
+            break;
+        case 4:
+            pass_data(OV2640_SHARPNESS_LEVEL3);
+            pass_data(OV2640_SHARPNESS_MANUAL);
+            break;
+        case 5:
+            pass_data(OV2640_SHARPNESS_LEVEL4);
+            pass_data(OV2640_SHARPNESS_MANUAL);
+            break;
+        case 6:
+            pass_data(OV2640_SHARPNESS_LEVEL5);
+            pass_data(OV2640_SHARPNESS_MANUAL);
+            break;
+        case 7:
+            pass_data(OV2640_SHARPNESS_LEVEL6);
+            pass_data(OV2640_SHARPNESS_MANUAL);
+            break;
+        default: /* normally set with 0, but also fallback for invalid values */
+            pass_data(OV2640_SHARPNESS_AUTO);
+            break;
+
+    }
+}
+
 
 void OV2640_Special_Effects(uint8_t eft)
 {

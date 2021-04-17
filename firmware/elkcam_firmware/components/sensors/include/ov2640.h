@@ -187,6 +187,9 @@ void OV2640_Brightness(uint8_t bright);
  */
 void OV2640_Contrast(uint8_t contrast);
 
+void OV2640_Hue(uint8_t hue);
+void OV2640_Sharpness(uint8_t sharpness);
+
 /**
  * @brief Special effects Settings
  * 

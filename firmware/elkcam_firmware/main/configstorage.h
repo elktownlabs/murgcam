@@ -12,6 +12,8 @@ typedef struct {
     uint8_t color_saturation;
     uint8_t brightness;
     uint8_t contrast;
+    uint8_t hue;
+    uint8_t sharpness;
 } camera_config_t;
 
 

@@ -65,6 +65,8 @@ static esp_err_t read_cam_config(camera_config_t* data)
     data->color_saturation = CAM_DEFAULT_COLOR_SATURATION;
     data->brightness = CAM_DEFAULT_BRIGHTNESS;
     data->contrast = CAM_DEFAULT_CONTRAST;
+    data->hue = CAM_DEFAULT_HUE;
+    data->sharpness = CAM_DEFAULT_SHARPNESS;
 
     /* open nvs */
     err = nvs_open(NVS_HANDLE, NVS_READONLY, &handle);
@@ -116,7 +118,7 @@ static esp_err_t write_cam_config(camera_config_t* data)
     }
     global_err = ESP_OK;
 
-    if (data->quality > 63) data->quality = 64;
+    if (data->quality > 63) data->quality = 63;
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_QUALITY, data->quality);
     log_write_result(err, &global_err, "Cam Config: quality");
 
@@ -128,17 +130,25 @@ static esp_err_t write_cam_config(camera_config_t* data)
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_LIGHT_MODE, data->light_mode);
     log_write_result(err, &global_err, "Cam Config: light mode");
 
-    if (data->color_saturation > 13) data->color_saturation = 13;
+    if (data->color_saturation > 9) data->color_saturation = 9;
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_COLOR_SATURATION, data->color_saturation);
     log_write_result(err, &global_err, "Cam Config: color saturation");
 
-    if (data->brightness > 15) data->brightness = 15;
+    if (data->brightness > 9) data->brightness = 9;
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_BRIGHTNESS, data->brightness);
     log_write_result(err, &global_err, "Cam Config: color saturation");
 
-    if (data->auto_exposure > 4) data->auto_exposure = 4;
+    if (data->contrast > 9) data->contrast = 9;
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_CONTRAST, data->contrast);
     log_write_result(err, &global_err, "Cam Config: contrast");
+
+    if (data->hue > 5) data->hue = 5;
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_HUE, data->hue);
+    log_write_result(err, &global_err, "Cam Config: hue");
+
+    if (data->sharpness > 7) data->sharpness = 7;
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_SHARPNESS, data->sharpness);
+    log_write_result(err, &global_err, "Cam Config: sharpness");
 
     nvs_close(handle);
     return global_err;
