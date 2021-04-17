@@ -102,6 +102,16 @@ static void update_config_from_json(cJSON* json)
         ESP_LOGI(TAG, "Updating cam_contrast to %d", data->valueint);
         cam_conf.contrast = data->valueint;
     }
+    data = cJSON_GetObjectItemCaseSensitive(json, "cam_hue");
+    if (cJSON_IsNumber(data)) {
+        ESP_LOGI(TAG, "Updating cam_hue to %d", data->valueint);
+        cam_conf.hue = data->valueint;
+    }
+    data = cJSON_GetObjectItemCaseSensitive(json, "cam_sharpness");
+    if (cJSON_IsNumber(data)) {
+        ESP_LOGI(TAG, "Updating cam_sharpness to %d", data->valueint);
+        cam_conf.sharpness = data->valueint;
+    }
     data = cJSON_GetObjectItemCaseSensitive(json, "cell_apn_auth");
     if (cJSON_IsNumber(data)) {
         ESP_LOGI(TAG, "Updating cell_apn_auth to %d", data->valueint);

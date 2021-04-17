@@ -13,10 +13,12 @@
 /* default picture settings */
 #define CAM_DEFAULT_QUALITY (10)  /* 0 - 63 */
 #define CAM_DEFAULT_AUTO_EXPOSURE (2)
-#define CAM_DEFAULT_LIGHT_MODE (4)
-#define CAM_DEFAULT_COLOR_SATURATION (8)
-#define CAM_DEFAULT_BRIGHTNESS (8)
-#define CAM_DEFAULT_CONTRAST (2)
+#define CAM_DEFAULT_LIGHT_MODE (0)
+#define CAM_DEFAULT_COLOR_SATURATION (0)
+#define CAM_DEFAULT_BRIGHTNESS (0)
+#define CAM_DEFAULT_CONTRAST (0)
+#define CAM_DEFAULT_HUE (0)
+#define CAM_DEFAULT_SHARPNESS (0)
 
 /* default cell service settings */
 #define CAM_CELL_PIN "7190"

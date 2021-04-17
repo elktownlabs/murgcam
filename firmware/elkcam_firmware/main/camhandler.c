@@ -73,6 +73,10 @@ void camhandler_load_config_from_nvs()
     ESP_LOGI(TAG, "Setting brightness to %d", config->brightness);
     OV2640_Contrast(config->contrast);
     ESP_LOGI(TAG, "Setting contrast to %d", config->contrast);
+    OV2640_Hue(config->hue);
+    ESP_LOGI(TAG, "Setting hue to %d", config->hue);
+    OV2640_Sharpness(config->hue);
+    ESP_LOGI(TAG, "Setting sharpness to %d", config->hue);
 }
 
 esp_err_t init_cam()
