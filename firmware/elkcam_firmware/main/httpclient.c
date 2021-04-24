@@ -263,8 +263,31 @@ esp_err_t send_data(mbedtls_ssl_context* ssl, https_upload_t* content)
         cJSON_AddNumberToObject(root, "power_startup", power_on_startup);
     }
     cJSON_AddNumberToObject(root, "camera_error", content->error);
+    /* add current camera settings */
+    cJSON* camSettings = cJSON_CreateObject();
+    camera_config_t cam_conf = *(config_cam());
+    system_config_t sys_conf = *(config_system());
+    cell_config_t cell_conf = *(config_cell());
+    cJSON_AddNumberToObject(camSettings, "sys_secs_between_photos",  sys_conf.secs_between_photos);
+    cJSON_AddNumberToObject(camSettings, "cam_quality",  cam_conf.quality);
+    cJSON_AddNumberToObject(camSettings, "cam_auto_exposure",  cam_conf.auto_exposure);
+    cJSON_AddNumberToObject(camSettings, "cam_light_mode",  cam_conf.light_mode);
+    cJSON_AddNumberToObject(camSettings, "cam_color_saturation",  cam_conf.color_saturation);
+    cJSON_AddNumberToObject(camSettings, "cam_brightness",  cam_conf.brightness);
+    cJSON_AddNumberToObject(camSettings, "cam_contrast",  cam_conf.contrast);
+    cJSON_AddNumberToObject(camSettings, "cam_hue",  cam_conf.hue);
+    cJSON_AddNumberToObject(camSettings, "cam_sharpness",  cam_conf.sharpness);
+    cJSON_AddNumberToObject(camSettings, "cell_apn_auth",  cell_conf.apn_auth);
+    cJSON_AddStringToObject(camSettings, "cell_pin",  cell_conf.pin);
+    cJSON_AddStringToObject(camSettings, "cell_apn",  cell_conf.apn);
+    cJSON_AddStringToObject(camSettings, "cell_apn_user",  cell_conf.apn_user);
+    cJSON_AddStringToObject(camSettings, "cell_apn_pass",  cell_conf.apn_pass);
+    cJSON_AddStringToObject(camSettings, "cell_remote_address",  cell_conf.remote_address);
+    cJSON_AddStringToObject(camSettings, "cell_remote_url",  cell_conf.remote_url);
+    cJSON_AddItemToObject(root, "settings", camSettings);
+
+    /* get json string */
 	const char *my_json_string = cJSON_Print(root);
-	ESP_LOGI(TAG, "my_json_string\n%s",my_json_string);
 
     int combinedsize = 0;
     combinedsize += 2 + strlen(MULTIPART_BOUNDARY) + 2 + strlen(DISPOSITION_META) + 2 + strlen(my_json_string);
