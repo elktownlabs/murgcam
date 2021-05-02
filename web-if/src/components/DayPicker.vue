@@ -20,7 +20,8 @@
     </v-menu>
 </template>
 <script>
-  import axios from 'axios';
+  import axios from 'axios'
+  import store from "../store"
 
   export default {
     name: "DayPicker",
@@ -33,8 +34,8 @@
         let dateStr = "year="+year+"&month="+month
         axios.get('https://wwv-schwarzwald.de/webcam/api/photos_per_month?'+dateStr,
           { auth: {
-            username: 'user',
-            password: 'user00!'
+            username: store.getters.currentUser,
+            password: store.getters.currentPassword
         }}).then(response => {
           this.daysWithPhotos = []
           response.data.forEach(element => {
@@ -57,9 +58,6 @@
           this.updateDate(null)
         }
       },
-      value: function(val) {
-        console.log("X " + val)
-      }
     },
     data: () => ({
       pickerDate: null,

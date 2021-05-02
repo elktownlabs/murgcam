@@ -27,11 +27,11 @@
                 <tr><th class="text-left">Measure</th><th class="text-left">Value</th><th class="text-left">Unit</th></tr>
               </thead>
               <tbody>
-                <tr><td>Battery Voltage during Boot Process</td><td>{{ Number(value.telemetry.vsupply_startup).toFixed(2) }}</td><td>V</td></tr>
-                <tr><td>Battery Current during Boot Process</td><td>{{ (Number(value.telemetry.current_startup) * 1000).toFixed(1) }} </td><td>mA</td></tr>
-                <tr><td>Min. Battery Voltage during GPRS Connection Negotiation</td><td>{{ Number(value.telemetry.voltage_min_cell_negotiation).toFixed(2) }}</td><td>V</td></tr>
-                <tr><td>Avg. Battery Current during GPRS Connection Negotiation</td><td>{{ (Number(value.telemetry.current_avg_cell_negotiation)* 1000).toFixed(1) }}</td><td>mA</td></tr>
-                <tr><td>Supply Voltage for GSM module</td><td> {{ (Number(value.telemetry.gsm_voltage) / 1000).toFixed(2) }}</td><td>V</td></tr>
+                <tr><td>Battery Voltage during Boot Process</td><td>{{ Number(telemetry.vsupply_startup).toFixed(2) }}</td><td>V</td></tr>
+                <tr><td>Battery Current during Boot Process</td><td>{{ (Number(telemetry.current_startup) * 1000).toFixed(1) }} </td><td>mA</td></tr>
+                <tr><td>Min. Battery Voltage during GPRS Connection Negotiation</td><td>{{ Number(telemetry.voltage_min_cell_negotiation).toFixed(2) }}</td><td>V</td></tr>
+                <tr><td>Avg. Battery Current during GPRS Connection Negotiation</td><td>{{ (Number(telemetry.current_avg_cell_negotiation)* 1000).toFixed(1) }}</td><td>mA</td></tr>
+                <tr><td>Supply Voltage for GSM module</td><td> {{ (Number(telemetry.gsm_voltage) / 1000).toFixed(2) }}</td><td>V</td></tr>
               </tbody>
             </v-simple-table>
             <h3 class="my-3">GSM</h3>
@@ -40,20 +40,29 @@
                 <tr><th class="text-left">Measure</th><th class="text-left">Value</th><th class="text-left">Unit</th></tr>
               </thead>
               <tbody>
-                <tr><td>Broadcast Control Channel (BCCH)</td><td colspan="2">{{ value.telemetry.gsm_bcch }}</td></tr>
-                <tr><td>Base Station Identity Code (BSIC)</td><td colspan="2">{{ value.telemetry.gsm_bsic }}</td></tr>
-                <tr><td>Base Station Location (courtesy of nobbi.com)</td><td v-if="cell_info_from_api" colspan="2">{{ cell_info_from_api.site.description }}<v-btn small icon color="blue" :href="osmurl" target="_blank"><v-icon>mdi-map-marker</v-icon></v-btn></td></tr>
-                <tr><td>Cell ID</td><td colspan="2">{{ value.telemetry.gsm_cellid }}</td></tr>
-                <tr><td>Location Area (LAC)</td><td colspan="2">{{ value.telemetry.gsm_lac }}</td></tr>
-                <tr><td>Country Code (MCC)</td><td colspan="2">{{ value.telemetry.gsm_mcc }}</td></tr>
-                <tr><td>Network Code (MNC)</td><td colspan="2">{{ value.telemetry.gsm_mnc }}</td></tr>
-                <tr><td>Network Operator</td><td v-if="cell_info_from_api" colspan="2">{{ cell_info_from_api.provider.country }} / {{ cell_info_from_api.provider.operator }} ({{ cell_info_from_api.provider.brand }})</td></tr>
-                <tr><td>Receive Level (RXL)</td><td>{{ rxlValToDbM[value.telemetry.gsm_rxl] }}</td><td>dBm</td></tr>
-                <tr><td>Receive Level Access Minimum (RLA)</td><td>{{ rxlValToDbM[value.telemetry.gsm_rla] }}</td><td>dBm</td></tr>
-                <tr><td>Receive Quality (RXQ)</td><td colspan="2"><span :style="rxqColor[value.telemetry.gsm_rxq]">{{ value.telemetry.gsm_rxq }} / 7</span></td></tr>
-                <tr><td>Timing Advance (TA)</td><td colspan="2">{{ value.telemetry.gsm_ta }} / 63</td></tr>
-                <tr><td>Distance to Base Station</td><td>{{ timingAdvanceToString(value.telemetry.gsm_ta) }}</td><td>m</td></tr>
-                <tr><td>Transmit Power Maximum CCCH (TXP)</td><td>{{ rxlValToDbM[value.telemetry.gsm_txp] }}</td><td>dBm</td></tr>
+                <tr><td>Broadcast Control Channel (BCCH)</td><td colspan="2">{{ telemetry.gsm_bcch }}</td></tr>
+                <tr><td>Base Station Identity Code (BSIC)</td><td colspan="2">{{ telemetry.gsm_bsic }}</td></tr>
+                <tr><td>Base Station Location (courtesy of nobbi.com)</td><td colspan="2">{{ cellSite.description }}<v-btn small icon color="blue" :href="osmurl" target="_blank"><v-icon>mdi-map-marker</v-icon></v-btn></td></tr>
+                <tr><td>Cell ID</td><td colspan="2">{{ telemetry.gsm_cellid }}</td></tr>
+                <tr><td>Location Area (LAC)</td><td colspan="2">{{ telemetry.gsm_lac }}</td></tr>
+                <tr><td>Country Code (MCC)</td><td colspan="2">{{ telemetry.gsm_mcc }}</td></tr>
+                <tr><td>Network Code (MNC)</td><td colspan="2">{{ telemetry.gsm_mnc }}</td></tr>
+                <tr><td>Network Operator</td><td colspan="2">{{ cellProvider.country }} / {{ cellProvider.operator }} ({{ cellProvider.brand }})</td></tr>
+                <tr><td>Receive Level (RXL)</td><td>{{ rxlValToDbM[telemetry.gsm_rxl] }}</td><td>dBm</td></tr>
+                <tr><td>Receive Level Access Minimum (RLA)</td><td>{{ rxlValToDbM[telemetry.gsm_rla] }}</td><td>dBm</td></tr>
+                <tr><td>Receive Quality (RXQ)</td><td colspan="2"><span :style="rxqColor[telemetry.gsm_rxq]">{{ telemetry.gsm_rxq }} / 7</span></td></tr>
+                <tr><td>Timing Advance (TA)</td><td colspan="2">{{ telemetry.gsm_ta }} / 63</td></tr>
+                <tr><td>Distance to Base Station</td><td>{{ timingAdvanceToString(telemetry.gsm_ta) }}</td><td>m</td></tr>
+                <tr><td>Transmit Power Maximum CCCH (TXP)</td><td>{{ rxlValToDbM[telemetry.gsm_txp] }}</td><td>dBm</td></tr>
+              </tbody>
+            </v-simple-table>
+            <h3 class="my-3">Software</h3>
+            <v-simple-table v-if="value != null" dense color="grey lighten-3">
+              <thead>
+                <tr><th class="text-left">Measure</th><th class="text-left">Value</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Firmware Version</td><td>{{ (typeof telemetry.firmware !== 'undefined') ? telemetry.firmware : "Unknown" }}</td></tr>
               </tbody>
             </v-simple-table>
           </v-card-text>
@@ -64,6 +73,8 @@
 </template>
 <script>
     import axios from 'axios';
+    import store from "../store";
+
     export default {
         name: 'Photo',
         components: {
@@ -146,50 +157,39 @@
           62: "-49 to -48",
           63: "> -48"
       },
-      cell_info_from_api: null,
       tab: null,
-      photoData: null
+      photoData: null,
+      telemetry: null,
+      cellProvider: null,
+      cellSite: null
+
     }),
     watch: {
       value: function(val) {
         if(val) {
-          this.loadCellInfoFromApi(val.telemetry.gsm_mcc, val.telemetry.gsm_mnc, val.telemetry.gsm_cellid)
           this.loadPhoto(val.id)
         } else {
-         this.cell_info_from_api = null
+         this.photoData = null
+         this.cellProvider = null
+         this.cellSite = null
+         this.telemetry = null
         }
       }
     },
     methods: {
       loadPhoto: function(id) {
         this.photoData = null
-        let authData = JSON.parse(localStorage.authentication)
-        if (authData && authData.authenticated) {
+        if (store.getters.isAuthenticated) {
           let queryStr = 'id='+id
-          axios.get('https://wwv-schwarzwald.de/webcam/api/photo?'+queryStr,
-            {  responseType: "arraybuffer" ,
-              auth: {
-                username: authData.user,
-                password: authData.password
-          }}).then(response => {
-            let base64String = btoa(
-              String.fromCharCode.apply(null, new Uint8Array(response.data))
-            );
-            this.photoData = "data:image/jpg;base64," + base64String;
-          });
-        }
-      },
-      loadCellInfoFromApi: function(mcc, mnc, cid) {
-        this.cell_info_from_api = null
-        let authData = JSON.parse(localStorage.authentication)
-        if (authData && authData.authenticated) {
-          let queryStr = 'mcc='+mcc+'&mnc='+mnc+'&cid='+cid;
-          axios.get('https://wwv-schwarzwald.de/webcam/api/cell_info?'+queryStr,
+          axios.get('https://wwv-schwarzwald.de/webcam/api/photo?'+queryStr+"&base64",
             { auth: {
-                username: authData.user,
-                password: authData.password
+                username: store.getters.currentUser,
+                password: store.getters.currentPassword
           }}).then(response => {
-            this.cell_info_from_api = response.data
+            this.photoData = "data:image/jpg;base64," + response.data.photo
+            this.telemetry = response.data.telemetry
+            this.cellProvider = response.data.cell_provider
+            this.cellSite = response.data.cell_site
           });
         }
       },
@@ -197,41 +197,15 @@
         if (val == 0xff) {
           return "Unknown"
         } else {
-          const dist = Number(this.value.telemetry.gsm_ta) * 550;
+          const dist = Number(this.telemetry.gsm_ta) * 550;
           return dist + " to " + (dist+449)
         }
       }
     },
-    mounted() {
-      if (this.value) {
-        this.loadCellInfoFromApi(this.value.telemetry.gsm_mcc, this.value.telemetry.gsm_mnc, this.value.telemetry.gsm_cellid)
-      } else {
-        this.cell_info_from_api = null
-      }
-    },
     computed: {
       osmurl: function() {
-        return "http://www.openstreetmap.org/?mlat="+this.cell_info_from_api.site.latitude+"&mlon="+this.cell_info_from_api.site.longitude+"&zoom=12"
+        return "http://www.openstreetmap.org/?mlat="+this.cellSite.latitude+"&mlon="+this.cellSite.longitude+"&zoom=12"
       },
-      photourl: function() {
-        let authData = JSON.parse(localStorage.authentication)
-        if (authData && authData.authenticated) {
-          return "https://"+authData.user+":"+authData.password+"@wwv-schwarzwald.de/webcam/api/photo?id=" + this.value.id
-        } else {
-          return ""
-        }
-      },
-      convertedTelemetryValues: function() {
-        let values = []
-        this.telemetryitems.forEach(element => {
-          if (element.convert) {
-            values.push({ name: element.name, value: element.convert(this.value.telemetry[element.value]), unit: element.unit})
-          } else {
-            values.push({ name: element.name, value: this.value.telemetry[element.value], unit: element.unit})
-          }
-        });
-        return values
-      }
     }
   }
 </script>
