@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define ELKCAM_SW_VERSION "0.0.3"
+#define ELKCAM_SW_VERSION "0.0.4"
 
 /* wifi */
 #define CAM_CONFIG_SSID "elkcam"

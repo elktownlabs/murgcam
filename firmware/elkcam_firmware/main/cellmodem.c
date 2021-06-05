@@ -107,7 +107,7 @@ void close_cellmodem()
     esp_modem_netif_teardown(modem_netif_adapter);
 }
 
-void init_cellmodem()
+_Bool init_cellmodem()
 {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &on_ip_event, NULL));
@@ -142,8 +142,12 @@ void init_cellmodem()
     ESP_LOGI(TAG, "Init SIM800");
 
     modem_dce_t *dce = NULL;
-    while (!dce) {
+    int numRetries = 30;
+    while ((!dce) && (numRetries-- > 0)) {
         dce = sim800_init(dte);
+        if (!dce) {
+            ESP_LOGI(TAG, "Modem not yet initialized.");
+        }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
@@ -176,5 +180,9 @@ void init_cellmodem()
         esp_netif_attach(esp_netif, modem_netif_adapter);
         /* Wait for IP address */
         xEventGroupWaitBits(event_group, CONNECT_BIT, pdTRUE, pdTRUE, portMAX_DELAY);
+        return true;
+    } else {
+        ESP_LOGI(TAG, "Modem initialization failed. Not uploading.");
+        return false;
     }
 }

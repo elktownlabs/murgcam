@@ -190,26 +190,32 @@ void app_main(void)
     powerkey_radio(0);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     ESP_LOGI(TAG, "Init modem");
-    init_cellmodem();
+    bool modemInitSuccessful = init_cellmodem();
 
-    int uploadFinished = 0;
-    for (int i=0; i<120; i++) {
-        /* wait until upload to server is done */
-        if( xSemaphoreTake(sm_uploadeComplete, 1000 / portTICK_PERIOD_MS) == pdTRUE ) {
-            ESP_LOGI(TAG, "Upload has finished. Shutting everything down.");
-            uploadFinished = 1;
-            break;
+    // only if connection was successful
+    if (modemInitSuccessful) {
+        int uploadFinished = 0;
+        for (int i=0; i<30; i++) {
+            /* wait until upload to server is done */
+            if( xSemaphoreTake(sm_uploadeComplete, pdMS_TO_TICKS(1000)) == pdTRUE ) {
+                ESP_LOGI(TAG, "Upload has finished. Shutting everything down.");
+                uploadFinished = 1;
+                break;
+            } else {
+                ESP_LOGI(TAG, "Upload not yet finished. Retrying.");
+            }
+        }
+        if (!uploadFinished) {
+            ESP_LOGI(TAG, "Unable to upload. Something went wrong with the modem");
         }
     }
-    if (!uploadFinished) {
-        ESP_LOGI(TAG, "Unable to upload. Something went wrong with the modem");
-    }
+
     /* deinitialize stuff */
     cam_give(upload_data.bufptr);
 
     /* tear down connection */
     ESP_LOGI(TAG, "Closing modem connection");
-    close_cellmodem();
+    if (modemInitSuccessful) close_cellmodem();
 
     /* power down modem */
     ESP_LOGI(TAG, "Modem power key on for 1.2s");
