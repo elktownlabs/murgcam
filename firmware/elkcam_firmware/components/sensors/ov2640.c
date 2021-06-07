@@ -1041,7 +1041,6 @@ void OV2640_Mirror_Set(uint8_t h, uint8_t v)
 void OV2640_Quality(uint8_t q)
 {
     if (q > 63) q = 63;
-    q = 5;
     SCCB_Write(SCCB_ID ,0xFF, 0x00);
     SCCB_Write(SCCB_ID ,OV2640_DSP_Qs, q);
 }
