@@ -34,7 +34,7 @@ esp_err_t OV2640_Init(uint8_t mode, uint8_t fre_double_en)
 
     SCCB_Write(SCCB_ID ,OV2640_DSP_RA_DLMT, 0x01);	/*!< Operate sensor register */
     SCCB_Write(SCCB_ID ,OV2640_SENSOR_COM7, 0x80);	/*!< Soft reset OV2640 */
-    delay_ms(50);
+    delay_ms(100);
     reg = SCCB_Read(SCCB_ID, OV2640_SENSOR_MIDH);	/*!< Read the manufacturer high 8 bits ID */
     reg <<= 8;
     reg |= SCCB_Read(SCCB_ID, OV2640_SENSOR_MIDL);	/*!< Read the manufacturer low 8 bits ID */
@@ -1041,6 +1041,7 @@ void OV2640_Mirror_Set(uint8_t h, uint8_t v)
 void OV2640_Quality(uint8_t q)
 {
     if (q > 63) q = 63;
+    q = 5;
     SCCB_Write(SCCB_ID ,0xFF, 0x00);
     SCCB_Write(SCCB_ID ,OV2640_DSP_Qs, q);
 }

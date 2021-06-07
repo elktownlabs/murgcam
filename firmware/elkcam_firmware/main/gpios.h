@@ -7,6 +7,7 @@
 void init_gpios();
 void switch_led(int led, int on);
 void power_cam(int power);
+void reset_cam(int reset);
 void power_radio(int power);
 void powerkey_radio(int on);
 

@@ -11,6 +11,7 @@
 #include "config.h"
 #include "sim800.h"
 #include "ina226.h"
+#include "configstorage.h"
 
 static const char* TAG = "cellmodem";
 
@@ -107,7 +108,7 @@ void close_cellmodem()
     esp_modem_netif_teardown(modem_netif_adapter);
 }
 
-_Bool init_cellmodem()
+_Bool init_cellmodem(cell_config_t* cellConfig)
 {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &on_ip_event, NULL));
@@ -120,11 +121,11 @@ _Bool init_cellmodem()
     esp_netif_t *esp_netif = esp_netif_new(&cfg);
     assert(esp_netif);
 
-
     /* create dte object */
     esp_modem_dte_config_t config = ESP_MODEM_DTE_DEFAULT_CONFIG();
     /* setup UART specific configuration based on kconfig options */
-    strcpy(config.pin, CAM_GSM_PIN);
+    strcpy(config.pin, cellConfig->pin);
+    strcpy(config.apn, cellConfig->apn);
     config.tx_io_num = SIM800_TX_GPIO;
     config.rx_io_num = SIM800_RX_GPIO;
     config.rx_buffer_size = 1024;
@@ -167,20 +168,43 @@ _Bool init_cellmodem()
         uint32_t voltage = 0, bcs = 0, bcl = 0;
         ESP_ERROR_CHECK(dce->get_battery_status(dce, &bcs, &bcl, &voltage));
         ESP_LOGI(TAG, "Battery voltage: %d mV", voltage);
-
+        ESP_LOGI(TAG, "APN: %s", config.apn);
+        ESP_LOGI(TAG, "PIN: %s", config.pin);
         // authenticate
-        #if 0
-        esp_netif_auth_type_t auth_type = NETIF_PPP_AUTHTYPE_PAP;
-        esp_netif_ppp_set_auth(esp_netif, auth_type, CONFIG_EXAMPLE_MODEM_PPP_AUTH_USERNAME, CONFIG_EXAMPLE_MODEM_PPP_AUTH_PASSWORD);
-        #endif
+        esp_netif_auth_type_t auth_type = NETIF_PPP_AUTHTYPE_NONE;
+        switch (cellConfig->apn_auth) {
+        case 1:
+            auth_type = NETIF_PPP_AUTHTYPE_PAP;
+            ESP_LOGI(TAG, "Using APN authentication PAP with user %s and pass %s", cellConfig->apn_user, cellConfig->apn_pass);
+            break;
+        case 2:
+            auth_type = NETIF_PPP_AUTHTYPE_CHAP;
+            ESP_LOGI(TAG, "Using APN authentication CHAP with user %s and pass %s", cellConfig->apn_user, cellConfig->apn_pass);
+            break;
+        default:
+            ESP_LOGI(TAG, "Using no APN authentication");
+        }
+        if (auth_type != NETIF_PPP_AUTHTYPE_NONE) {
+            esp_netif_ppp_set_auth(esp_netif, auth_type, cellConfig->apn_user, cellConfig->apn_pass);
+        }
 
         modem_netif_adapter = esp_modem_netif_setup(dte);
         esp_modem_netif_set_default_handlers(modem_netif_adapter, esp_netif);
         /* attach the modem to the network interface */
         esp_netif_attach(esp_netif, modem_netif_adapter);
         /* Wait for IP address */
-        xEventGroupWaitBits(event_group, CONNECT_BIT, pdTRUE, pdTRUE, portMAX_DELAY);
-        return true;
+        ESP_LOGI(TAG, "Using no APN authentication");
+
+        // wati 30sec for connection
+        EventBits_t uxBits;
+        uxBits = xEventGroupWaitBits(event_group, CONNECT_BIT, pdTRUE, pdTRUE, pdMS_TO_TICKS(30000));
+        if (uxBits == CONNECT_BIT) {
+            ESP_LOGI(TAG, "Successfully connected PPP");
+            return true;
+        } else {
+            ESP_LOGE(TAG, "PPP not conneced. Timeout.");
+            return false;
+        }
     } else {
         ESP_LOGI(TAG, "Modem initialization failed. Not uploading.");
         return false;

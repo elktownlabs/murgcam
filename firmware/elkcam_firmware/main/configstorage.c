@@ -98,6 +98,15 @@ static esp_err_t read_cam_config(camera_config_t* data)
     err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_CONTRAST, &data->contrast);
     log_read_result(err, &global_err, "Cam Config: contrast");
 
+    data->hue = CAM_DEFAULT_HUE;
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_HUE, &data->hue);
+    log_read_result(err, &global_err, "Cam Config: hue");
+
+    data->sharpness = CAM_DEFAULT_SHARPNESS;
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_SHARPNESS, &data->sharpness);
+    log_read_result(err, &global_err, "Cam Config: sharpness");
+
+
     nvs_close(handle);
     return global_err;
 }
@@ -144,10 +153,12 @@ static esp_err_t write_cam_config(camera_config_t* data)
 
     if (data->hue > 5) data->hue = 5;
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_HUE, data->hue);
+    ESP_LOGI(TAG, "Hue: %d", data->hue);
     log_write_result(err, &global_err, "Cam Config: hue");
 
     if (data->sharpness > 7) data->sharpness = 7;
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_SHARPNESS, data->sharpness);
+    ESP_LOGI(TAG, "Sharpness: %d", data->sharpness);
     log_write_result(err, &global_err, "Cam Config: sharpness");
 
     nvs_close(handle);
@@ -331,7 +342,6 @@ void config_load_values()
     if (err != ESP_OK) {
         ESP_LOGW(TAG, "Unable to load system configuration values (%s).", esp_err_to_name(err));
     }
-
 }
 
 
