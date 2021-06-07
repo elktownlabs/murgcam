@@ -21,8 +21,6 @@
 #include "esp_log.h"
 
 
-#define CAM_MODEM_APN "internet"
-
 #define ESP_MODEM_EVENT_QUEUE_SIZE (16)
 
 #define MIN_PATTERN_INTERVAL (9)
@@ -380,6 +378,7 @@ modem_dte_t *esp_modem_dte_init(const esp_modem_dte_config_t *config)
     esp_dte->uart_port = config->port_num;
     esp_dte->parent.flow_ctrl = config->flow_control;
     strcpy(esp_dte->parent.pin, config->pin);
+    strcpy(esp_dte->parent.apn, config->apn);
     /* Bind methods */
     esp_dte->parent.send_cmd = esp_modem_dte_send_cmd;
     esp_dte->parent.send_data = esp_modem_dte_send_data;
@@ -481,7 +480,7 @@ esp_err_t esp_modem_start_ppp(modem_dte_t *dte)
     MODEM_CHECK(dce, "DTE has not yet bind with DCE", err);
     esp_modem_dte_t *esp_dte = __containerof(dte, esp_modem_dte_t, parent);
     /* Set PDP Context */
-    MODEM_CHECK(dce->define_pdp_context(dce, 1, "IP", CAM_MODEM_APN) == ESP_OK, "set MODEM APN failed", err);
+    MODEM_CHECK(dce->define_pdp_context(dce, 1, "IP", dte->apn) == ESP_OK, "set MODEM APN failed", err);
     /* Enter PPP mode */
     MODEM_CHECK(dte->change_mode(dte, MODEM_PPP_MODE) == ESP_OK, "enter ppp mode failed", err);
 

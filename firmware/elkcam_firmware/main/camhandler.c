@@ -59,6 +59,11 @@ static const char* TAG = "camhandler";
 
 void camhandler_load_config_from_nvs()
 {
+    OV2640_JPEG_Mode(0);
+    OV2640_ImageSize_Set(1600, 1200);
+    OV2640_ImageWin_Set(0, 0, 1600, 1200);
+    OV2640_OutSize_Set(CAM_WIDTH, CAM_HEIGHT);
+
     ESP_LOGI(TAG, "Configuring camera to global config settings");
     camera_config_t* config = config_cam();
     OV2640_Quality(config->quality);
@@ -75,16 +80,23 @@ void camhandler_load_config_from_nvs()
     ESP_LOGI(TAG, "Setting contrast to %d", config->contrast);
     OV2640_Hue(config->hue);
     ESP_LOGI(TAG, "Setting hue to %d", config->hue);
-    OV2640_Sharpness(config->hue);
-    ESP_LOGI(TAG, "Setting sharpness to %d", config->hue);
+    OV2640_Sharpness(config->sharpness);
+    ESP_LOGI(TAG, "Setting sharpness to %d", config->sharpness);
 }
 
 esp_err_t init_cam()
 {
     // power on cam and wait a bit for things to settle
     ESP_LOGI(TAG, "Powering on camera and waiting for camera to settle");
+    power_cam(0);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     power_cam(1);
     vTaskDelay(4000 / portTICK_PERIOD_MS);
+    ESP_LOGI(TAG, "Resetting cam");
+    reset_cam(1);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
+    reset_cam(0);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
 
     ESP_LOGI(TAG, "Initializing camera");
 
@@ -121,12 +133,7 @@ esp_err_t init_cam()
         return ESP_FAIL;
     }
 
-    OV2640_JPEG_Mode(0);
-    OV2640_ImageSize_Set(1600, 1200);
-    OV2640_ImageWin_Set(0, 0, 1600, 1200);
-    OV2640_OutSize_Set(CAM_WIDTH, CAM_HEIGHT);
-    OV2640_Light_Mode(4);
-
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     ESP_LOGI(TAG, "sensor initialized and ready");
     return ESP_OK;
 }
@@ -134,4 +141,19 @@ esp_err_t init_cam()
 void shutdown_cam()
 {
     power_cam(0);
+}
+
+esp_err_t reinit_cam()
+{
+    ESP_LOGI(TAG, "Reinitializing cam");
+    reset_cam(1);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    reset_cam(0);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+
+    if (OV2640_Init(1, 0) != 0) {
+        ESP_LOGE(TAG, "sensor initialization failed. ");
+        return ESP_FAIL;
+    }
+    return ESP_OK;
 }

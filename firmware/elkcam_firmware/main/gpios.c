@@ -8,6 +8,7 @@ static const char* TAG = "gpios";
 #define GPIO_POWER_RADIO (19)
 #define GPIO_POWERKEY_RADIO (33)
 #define GPIO_POWER_CAM (20)
+#define GPIO_RESET_CAM (21)
 
 static const int ledgpios[] = {35, 34};
 
@@ -47,6 +48,11 @@ void init_gpios()
     gpio_set_level(GPIO_POWER_RADIO, 1);
     gpio_set_direction(GPIO_POWERKEY_RADIO, GPIO_MODE_OUTPUT_OD);
     gpio_set_level(GPIO_POWERKEY_RADIO, 1);
+
+    /* configure gpio for cam reset */
+    gpio_set_direction(GPIO_RESET_CAM, GPIO_MODE_OUTPUT_OD);
+    gpio_pullup_en(GPIO_RESET_CAM);
+    gpio_set_level(GPIO_RESET_CAM, 1);
 }
 
 
@@ -77,7 +83,7 @@ void switch_led(int led, int on)
 
 void power_cam(int power)
 {
-    gpio_set_level(GPIO_POWER_CAM, power ? 1 : 00);
+    gpio_set_level(GPIO_POWER_CAM, power ? 1 : 0);
 }
 
 void power_radio(int power)
@@ -89,4 +95,9 @@ void power_radio(int power)
 void powerkey_radio(int on)
 {
     gpio_set_level(GPIO_POWERKEY_RADIO, on ? 0 : 1);
+}
+
+void reset_cam(int reset)
+{
+    gpio_set_level(GPIO_POWER_CAM, reset ? 0 : 1);
 }

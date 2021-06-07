@@ -50,6 +50,7 @@ typedef struct {
     uart_parity_t parity;           /*!< Parity type */
     modem_flow_ctrl_t flow_control; /*!< Flow control type */
     char pin[12];
+    char apn[32];
     uint32_t baud_rate;             /*!< Communication baud rate */
     int tx_io_num;                  /*!< TXD Pin Number */
     int rx_io_num;                  /*!< RXD Pin Number */

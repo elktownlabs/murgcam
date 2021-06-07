@@ -149,6 +149,7 @@ static void update_config_from_json(cJSON* json)
     }
 
     config_write_values(&sys_conf, &cell_conf, &cam_conf);
+    config_load_values();
 }
 
 

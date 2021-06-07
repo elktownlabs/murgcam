@@ -135,20 +135,22 @@ void app_main(void)
     /* create the semaphore for waiting until upload to server is complete */
     sm_uploadeComplete = xSemaphoreCreateBinary();
 
-    /* try five times to take a picture */
-    for (int i=0; i<5; i++) {
-        ESP_LOGI(TAG, "Starting up in regular single picture mode");
-        init_cam();
+    /* try to take a picture */
+    ESP_LOGI(TAG, "Starting up in regular single picture mode");
+    init_cam();
+    switch_led(CAM_LED_BLUE, 1);
+    reinit_cam();
 
-        ESP_LOGI(TAG, "Taking picture");
+    for (int i=1; i<5; i++) {
+        ESP_LOGI(TAG, "Taking picture. Try %i of 5", i);
         camhandler_load_config_from_nvs();
-        switch_led(CAM_LED_BLUE, 1);
         cam_start();
         upload_data.buflen = cam_take(&upload_data.bufptr, 5000 / portTICK_PERIOD_MS);
         if (upload_data.buflen == 0) {
             ESP_LOGE(TAG, "Camera timed out");
             upload_data.error = 1;
-        }  else {
+            reinit_cam();
+        } else {
             /* find end of jpeg stream and truncate data there */
             for (uint32_t i=0; i<upload_data.buflen-1; i++) {
                 if (upload_data.bufptr[i] == 0xff && upload_data.bufptr[i+1] == 0xd9) {
@@ -157,23 +159,22 @@ void app_main(void)
                     break;
                 }
             }
-            upload_data.error = 0;
             ESP_LOGI(TAG, "Picture taken. Size = %d", upload_data.buflen);
+            upload_data.error = 0;
+            break;
         }
-        switch_led(CAM_LED_BLUE, 0);
-        ESP_LOGI(TAG, "Shutting down and switching off camera");
-        cam_stop();
-        shutdown_cam();
-        /* if picture was taken successfully, end the loop */
-        if (upload_data.error == 0) break;
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+    switch_led(CAM_LED_BLUE, 0);
+    ESP_LOGI(TAG, "Shutting down and switching off camera");
+    cam_stop();
+    shutdown_cam();
 
     /* increase photo counter */
-    system_config_t sys_conf = *(config_system());
-    sys_conf.photo_counter++;
-    config_write_values(&sys_conf, 0x00, 0x00);
-
+    if (upload_data.error == 0) {
+        system_config_t sys_conf = *(config_system());
+        sys_conf.photo_counter++;
+        config_write_values(&sys_conf, 0x00, 0x00);
+    }
 
     /* upload to server */
     ESP_LOGI(TAG, "Uploading picture to server");
@@ -190,12 +191,13 @@ void app_main(void)
     powerkey_radio(0);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     ESP_LOGI(TAG, "Init modem");
-    bool modemInitSuccessful = init_cellmodem();
+    cell_config_t cell_conf = *(config_cell());
+    bool modemInitSuccessful = init_cellmodem(&cell_conf);
 
     // only if connection was successful
     if (modemInitSuccessful) {
         int uploadFinished = 0;
-        for (int i=0; i<30; i++) {
+        for (int i=0; i<90; i++) {
             /* wait until upload to server is done */
             if( xSemaphoreTake(sm_uploadeComplete, pdMS_TO_TICKS(1000)) == pdTRUE ) {
                 ESP_LOGI(TAG, "Upload has finished. Shutting everything down.");
