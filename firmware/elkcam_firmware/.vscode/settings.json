@@ -5,5 +5,6 @@
         "webserver.h": "c",
         "esp_modem_dce_service.h": "c"
     },
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "git.ignoreLimitWarning": true
 }
