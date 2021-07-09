@@ -338,9 +338,9 @@ static esp_err_t photo_get_handler(httpd_req_t *req)
     uint8_t *cam_buf = NULL;
 
     ESP_LOGI(TAG, "Taking picture");
-    cam_start();
     reinit_cam();
     camhandler_load_config_from_nvs();
+    cam_start();
     size_t data_len = cam_take(&cam_buf, 5000 / portTICK_PERIOD_MS);
     cam_stop();
     if (data_len == 0) {
