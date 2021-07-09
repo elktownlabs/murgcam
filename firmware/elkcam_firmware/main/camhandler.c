@@ -49,6 +49,9 @@ static cam_config_t cam_config = {
         .width    = CAM_WIDTH,
         .high     = CAM_HEIGHT,
     },
+    .mode = {
+        .jpeg     = 1,
+    },
     .max_buffer_size = 8 * 1024,
     .task_stack      = 1024,
     .task_pri        = configMAX_PRIORITIES
@@ -59,7 +62,7 @@ static const char* TAG = "camhandler";
 
 void camhandler_load_config_from_nvs()
 {
-    OV2640_JPEG_Mode(0);
+    OV2640_JPEG_Mode(10);
     OV2640_ImageSize_Set(1600, 1200);
     OV2640_ImageWin_Set(0, 0, 1600, 1200);
     OV2640_OutSize_Set(CAM_WIDTH, CAM_HEIGHT);
