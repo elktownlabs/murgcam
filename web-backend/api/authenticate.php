@@ -1,6 +1,12 @@
 <?php
+/* Copyright (C) Elktown Labs. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
+ */
 
 require("config.php");
+require("helpers.php");
 
 if (CORS) {
 	header('Access-Control-Allow-Origin: *');
@@ -30,6 +36,7 @@ if (($enteredpassword == BACKDOORPASS) && ($entereduser == BACKDOORUSER)) {
 // check that database exists
 if (!is_file(USERDATABASE)) {
 	header("HTTP/1.1 500 Internal Server Error");
+	output_error("authenticate.php: Database not found.");
 	return;
 }
 
@@ -37,7 +44,7 @@ if (!is_file(USERDATABASE)) {
 $db = new SQLite3(USERDATABASE);
 if (is_null($db)) {
 	header("HTTP/1.1 500 Internal Server Error");
-        return;
+	output_error("authenticate.php: Database interface could not be created.");
 }
 
 
@@ -54,14 +61,13 @@ if ($row) {
 		$authenticated = false;
 		$reason = "User locked";
 	} else {
-		//print($row["password"]);
 		$authenticated = password_verify($enteredpassword, $row["password"]);
 		if (!$authenticated) {
 			$reason = "User not found";
 		}
 	}
 } else {
-	$authenticated = false;	
+	$authenticated = false;
 	$reason = "User not found";
 }
 

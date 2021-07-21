@@ -1,6 +1,12 @@
 <?php
+/* Copyright (C) Elktown Labs. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
+ */
 
-require("config.php");
+require_once("config.php");
+require_once("helpers.php");
 
 if (CORS) {
 	header('Access-Control-Allow-Origin: *');
@@ -16,13 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // authentication
-if (!isset($_SERVER['PHP_AUTH_USER'])) {
+if (!authenticate_user()) {
     header('WWW-Authenticate: Basic realm="WebCam API"');
-    header('HTTP/1.0 401 Unauthorized');
-    exit;
-} elseif ($_SERVER['PHP_AUTH_PW'] != PASS || $_SERVER['PHP_AUTH_USER'] != USER) { 
-    header('WWW-Authenticate: Basic realm="WebCam API"');
-    header('HTTP/1.0 401 Unauthorized');
+    header('HTTP/1.1 401 Unauthorized');
     exit;
 }
 
