@@ -1,32 +1,32 @@
-<?php 
+<?php
+/* Copyright (C) Elktown Labs. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
+ */
 
-require("config.php");
+require_once("config.php");
+require_once("helpers.php");
 
 if (CORS) {
 	header('Access-Control-Allow-Origin: *');
 }
-header("Content-Type: application/json; charset=UTF-8");    
+header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
-header("Access-Control-Max-Age: 3600");    
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, origin");    
+header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, origin");
 
 // ignore post requests
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {    
-	   return 0;    
-}    
-
-
-// authentication
-if (!isset($_SERVER['PHP_AUTH_USER'])) {
-    header('WWW-Authenticate: Basic realm="WebCam API"');
-    header('HTTP/1.0 401 Unauthorized');
-    exit;
-} elseif ($_SERVER['PHP_AUTH_PW'] != PASS || $_SERVER['PHP_AUTH_USER'] != USER) { 
-    header('WWW-Authenticate: Basic realm="WebCam API"');
-    header('HTTP/1.0 401 Unauthorized');
-    exit;
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+	   return 0;
 }
 
+// authentication
+if (!authenticate_user()) {
+    header('WWW-Authenticate: Basic realm="WebCam API"');
+    header('HTTP/1.1 401 Unauthorized');
+    exit;
+}
 
 // check that arguments are correct
 if (!array_key_exists("year",  $_GET)) {
