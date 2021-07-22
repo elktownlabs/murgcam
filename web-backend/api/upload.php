@@ -1,10 +1,16 @@
 <?php
+/* Copyright (C) Elktown Labs. - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
+ */
+
+require("config.php");
+require("helpers.php");
 
 date_default_timezone_set("UTC");
 setlocale(LC_ALL, '');
 
-define('DATABASE', '/var/www/webcam/photos/photos.db');
-define('PHOTODIR', '/var/www/webcam/photos/');
 
 function __autoload($class)
 {
