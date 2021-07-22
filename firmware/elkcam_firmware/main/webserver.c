@@ -589,7 +589,7 @@ static esp_err_t config_set_handler(httpd_req_t *req)
     }
 
     config_write_values(&sys_conf, &cell_conf, &cam_conf);
-    ESP_LOGI(TAG, "Saved vaues to storage");
+    ESP_LOGI(TAG, "Saved values to storage");
     config_load_values();
 
     /* send response */

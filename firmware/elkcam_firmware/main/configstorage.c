@@ -161,6 +161,7 @@ static esp_err_t write_cam_config(camera_config_t* data)
     ESP_LOGI(TAG, "Sharpness: %d", data->sharpness);
     log_write_result(err, &global_err, "Cam Config: sharpness");
 
+    nvs_commit(handle);
     nvs_close(handle);
     return global_err;
 }
@@ -259,6 +260,7 @@ static esp_err_t write_cell_config(cell_config_t* data)
     err = nvs_set_str(handle, CONFIGSTORAGE_KEY_CELL_REMOTE_URL, data->remote_url);
     log_write_result(err, &global_err, "Cell Config: Remote url");
 
+    nvs_commit(handle);
     nvs_close(handle);
     return global_err;
 }
@@ -316,6 +318,7 @@ static esp_err_t write_system_config(system_config_t* data)
     err = nvs_set_u32(handle, CONFIGSTORAGE_KEY_SYS_PHOTO_COUNTER, data->photo_counter);
     log_write_result(err, &global_err, "System Config: photo counter");
 
+    nvs_commit(handle);
     nvs_close(handle);
     return global_err;
 }
