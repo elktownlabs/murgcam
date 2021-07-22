@@ -21,13 +21,13 @@
 #define CAM_DEFAULT_SHARPNESS (0)
 
 /* default cell service settings */
-#define CAM_CELL_PIN "7190"
-#define CAM_CELL_APN "internet"
-#define CAM_CELL_APN_USER ""
-#define CAM_CELL_APN_PASS ""
-#define CAM_CELL_APN_AUTH 0
-#define CAM_CELL_REMOTE_ADDRESS "1.2.3.4"
-#define CAM_CELL_REMOTE_URL "http://1.2.3.4/upload.php"
+#define CAM_CELL_PIN "6400"
+#define CAM_CELL_APN "internet.telekom"
+#define CAM_CELL_APN_USER "congstar"
+#define CAM_CELL_APN_PASS "cs"
+#define CAM_CELL_APN_AUTH 0x01 /*PAP*/
+#define CAM_CELL_REMOTE_ADDRESS "wwv-schwarzwald.de"
+#define CAM_CELL_REMOTE_URL "https://wwv-schwarzwald.de/webcam/api/upload"
 
 /* default system settings */
 #define SYS_DEFAULT_SECS_BETWEEN_PHOTOS (30*60)
