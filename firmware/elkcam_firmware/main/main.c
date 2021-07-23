@@ -72,7 +72,7 @@ static void on_transfer_done(void* handler_args, esp_event_base_t base, int32_t 
 
 void boot_msg()
 {
-    ESP_LOGI(TAG, "ElkCam Firmware V0.0.1, 03/18/2021 (c) Copyright 2021 Elktown Labs.");
+    ESP_LOGI(TAG, "ElkCam Firmware V%s, %s Copyright 2021 Elktown Labs.", ELKCAM_SW_VERSION, ELKCAM_SW_DATE);
     ESP_LOGI(TAG, "Booting ESP32S2 / FreeRTOS");
 
     /* Print chip information */
