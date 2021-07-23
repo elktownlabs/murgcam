@@ -193,7 +193,7 @@ _Bool init_cellmodem(cell_config_t* cellConfig)
         /* attach the modem to the network interface */
         esp_netif_attach(esp_netif, modem_netif_adapter);
         /* Wait for IP address */
-        ESP_LOGI(TAG, "Using no APN authentication");
+        ESP_LOGI(TAG, "Waiting for IP address");
 
         // wati 30sec for connection
         EventBits_t uxBits;

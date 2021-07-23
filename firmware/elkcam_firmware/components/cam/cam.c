@@ -230,7 +230,7 @@ static void cam_set_pin(const cam_config_t *config)
     ledc_channel_config(&ledc_channel);
 
     gpio_matrix_in(0x38, I2S0I_H_ENABLE_IDX, false);
-    ESP_LOGI(TAG, "cam_xclk_pin setup\n");
+    ESP_LOGI(TAG, "cam_xclk_pin setup");
 }
 
 static void cam_vsync_intr_enable(uint8_t en)
@@ -494,7 +494,7 @@ esp_err_t cam_init(const cam_config_t *config)
     cam_obj = (cam_obj_t *)heap_caps_calloc(1, sizeof(cam_obj_t), MALLOC_CAP_DMA);
 
     if (!cam_obj) {
-        ESP_LOGI(TAG, "camera object malloc error\n");
+        ESP_LOGI(TAG, "camera object malloc error");
         return ESP_FAIL;
     }
 
@@ -514,14 +514,14 @@ esp_err_t cam_init(const cam_config_t *config)
     cam_obj->frame_buffer_queue = xQueueCreate(2, sizeof(frame_buffer_event_t));
 
     if (cam_obj->frame1_buffer != NULL) {
-        ESP_LOGI(TAG, "frame1_buffer_en\n");
+        ESP_LOGI(TAG, "frame1_buffer_en");
         cam_obj->frame1_buffer_en = 1;
     } else {
         cam_obj->frame1_buffer_en = 0;
     }
 
     if (cam_obj->frame2_buffer != NULL) {
-        ESP_LOGI(TAG, "frame2_buffer_en\n");
+        ESP_LOGI(TAG, "frame2_buffer_en");
         cam_obj->frame2_buffer_en = 1;
     } else {
         cam_obj->frame2_buffer_en = 0;
