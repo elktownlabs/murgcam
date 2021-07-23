@@ -40,7 +40,7 @@ esp_err_t OV2640_Init(uint8_t mode, uint8_t fre_double_en)
     reg |= SCCB_Read(SCCB_ID, OV2640_SENSOR_MIDL);	/*!< Read the manufacturer low 8 bits ID */
 
     if (reg != OV2640_MID) {
-        ESP_LOGI(TAG, "MID:%d\r\n", reg);
+        ESP_LOGI(TAG, "MID:%d", reg);
         return ESP_FAIL;
     }
 
@@ -49,7 +49,7 @@ esp_err_t OV2640_Init(uint8_t mode, uint8_t fre_double_en)
     reg |= SCCB_Read(SCCB_ID, OV2640_SENSOR_PIDL);	/*!< Read the manufacturer low 8 bits ID */
 
     if (reg != OV2640_PID) {
-        ESP_LOGI(TAG, "HID:%d\r\n", reg);
+        ESP_LOGI(TAG, "HID:%d", reg);
         //return ESP_FAIL;
     }
 
@@ -1031,10 +1031,10 @@ void OV2640_Mirror_Set(uint8_t h, uint8_t v)
 {
     SCCB_Write(SCCB_ID, 0xFF, 0x01);
     uint8_t temp = SCCB_Read(SCCB_ID, OV2640_SENSOR_REG04);
-    ESP_LOGI(TAG, "before :%x\r\n", temp);
+    ESP_LOGI(TAG, "before :%x", temp);
     if (h) temp |= 0x80; else temp &= ~0x80;
     if (v) temp |= 0x40; else temp &= ~0x40;
-    ESP_LOGI(TAG, "after :%x\r\n", temp);
+    ESP_LOGI(TAG, "after :%x", temp);
     SCCB_Write(SCCB_ID, OV2640_SENSOR_REG04, temp);
 }
 

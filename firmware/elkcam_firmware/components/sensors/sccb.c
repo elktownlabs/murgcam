@@ -46,7 +46,7 @@ static uint8_t ESP_SLAVE_ADDR   = 0x00;
 
 int SCCB_Init(int pin_sda, int pin_scl)
 {
-    ESP_LOGI(TAG, "pin_sda %d pin_scl %d\n", pin_sda, pin_scl);
+    ESP_LOGI(TAG, "pin_sda %d pin_scl %d", pin_sda, pin_scl);
     
     static i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
@@ -150,7 +150,7 @@ uint8_t SCCB_Read16(uint8_t slv_addr, uint16_t reg)
     ret = i2c_master_cmd_begin(SCCB_I2C_PORT, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     if(ret != ESP_OK) {
-        ESP_LOGE(TAG, "W [%04x]=%02x fail\n", reg, data);
+        ESP_LOGE(TAG, "W [%04x]=%02x fail", reg, data);
     }
     return data;
 }
@@ -171,7 +171,7 @@ uint8_t SCCB_Write16(uint8_t slv_addr, uint16_t reg, uint8_t data)
     ret = i2c_master_cmd_begin(SCCB_I2C_PORT, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     if(ret != ESP_OK) {
-        ESP_LOGE(TAG, "W [%04x]=%02x %d fail\n", reg, data, i++);
+        ESP_LOGE(TAG, "W [%04x]=%02x %d fail", reg, data, i++);
     }
     return ret == ESP_OK ? 0 : -1;
 }
