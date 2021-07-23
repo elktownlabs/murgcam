@@ -1,13 +1,11 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define ELKCAM_SW_VERSION "0.0.4"
+#define ELKCAM_SW_VERSION "0.0.5"
+#define ELKCAM_SW_DATE "07/23/2021"
 
 /* wifi */
 #define CAM_CONFIG_SSID "elkcam"
-
-/* gsm net access */
-#define CAM_GSM_PIN "7190"
 
 
 /* default picture settings */
