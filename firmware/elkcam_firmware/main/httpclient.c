@@ -37,16 +37,14 @@
 
 
 /* Constants that aren't configurable in menuconfig */
-#define WEB_SERVER "wwv-schwarzwald.de"
 #define WEB_PORT "443"
-#define WEB_URL "https://wwv-schwarzwald.de/webcam/upload"
 
 #define MULTIPART_BOUNDARY "------------------------8a7c2b940ad18aad"
 
 static const char *TAG = "httpclient";
 
-static const char *REQUEST = "POST " WEB_URL " HTTP/1.1\r\n"
-    "Host: "WEB_SERVER"\r\n"
+static const char *REQUEST = "POST %s HTTP/1.1\r\n"
+    "Host: %s\r\n"
     "User-Agent: elktown-webcam/1.0 esp32\r\n"
     "Content-Type: multipart/form-data; boundary=" MULTIPART_BOUNDARY "\r\n"
     "Authorization: Basic dXBsb2FkZXI6Y2FYaW51UUEySW1vY2hvdEg=\r\n"
@@ -296,7 +294,7 @@ esp_err_t send_data(mbedtls_ssl_context* ssl, https_upload_t* content)
     combinedsize += 4 + strlen(MULTIPART_BOUNDARY) + 4;
     ESP_LOGI(TAG, "Combined size expected: %d", combinedsize);
     char* buf = heap_caps_malloc(2048, MALLOC_CAP_SPIRAM);
-    snprintf(buf, 2048, REQUEST, combinedsize);
+    snprintf(buf, 2048, REQUEST, cell_conf.remote_url, cell_conf.remote_address, combinedsize);
     int x = 0;
     write_bytes(ssl, buf, strlen(buf));
     snprintf(buf, 2048, "--%s\r\n", MULTIPART_BOUNDARY);
@@ -320,6 +318,8 @@ esp_err_t send_data(mbedtls_ssl_context* ssl, https_upload_t* content)
 static void https_get_task(void *pvParameters)
 {
     https_upload_t* content = (https_upload_t*)pvParameters;
+
+    cell_config_t cell_conf = *(config_cell());
 
     char buf[512];
     int ret, flags, len;
@@ -359,7 +359,7 @@ static void https_get_task(void *pvParameters)
     ESP_LOGI(TAG, "Setting hostname for TLS session...");
 
      /* Hostname set here should match CN in server certificate */
-    if((ret = mbedtls_ssl_set_hostname(&ssl, WEB_SERVER)) != 0)
+    if((ret = mbedtls_ssl_set_hostname(&ssl, cell_conf.remote_address)) != 0)
     {
         ESP_LOGE(TAG, "mbedtls_ssl_set_hostname returned -0x%x", -ret);
         abort();
@@ -397,9 +397,9 @@ static void https_get_task(void *pvParameters)
 
     mbedtls_net_init(&server_fd);
 
-    ESP_LOGI(TAG, "Connecting to %s:%s...", WEB_SERVER, WEB_PORT);
+    ESP_LOGI(TAG, "Connecting to %s:%s...", cell_conf.remote_address, WEB_PORT);
 
-    if ((ret = mbedtls_net_connect(&server_fd, WEB_SERVER,
+    if ((ret = mbedtls_net_connect(&server_fd, cell_conf.remote_address,
                                     WEB_PORT, MBEDTLS_NET_PROTO_TCP)) != 0)
     {
         ESP_LOGE(TAG, "mbedtls_net_connect returned -%x", -ret);
@@ -436,6 +436,7 @@ static void https_get_task(void *pvParameters)
     }
 
     ESP_LOGI(TAG, "Cipher suite is %s", mbedtls_ssl_get_ciphersuite(&ssl));
+    ESP_LOGI(TAG, "Remote URL is: %s", cell_conf.remote_url);
     ESP_LOGI(TAG, "Writing HTTP request...");
     send_data(&ssl, content);
     ESP_LOGI(TAG, "Reading HTTP response...");

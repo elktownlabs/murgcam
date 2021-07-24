@@ -103,16 +103,16 @@ static void on_ip_event(void *arg, esp_event_base_t event_base,
 
 void close_cellmodem()
 {
-    ESP_ERROR_CHECK(esp_modem_stop_ppp(dte));
+    esp_modem_stop_ppp(dte);
     xEventGroupWaitBits(event_group, STOP_BIT, pdTRUE, pdTRUE, portMAX_DELAY);
     esp_modem_netif_teardown(modem_netif_adapter);
 }
 
 _Bool init_cellmodem(cell_config_t* cellConfig)
 {
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &on_ip_event, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(NETIF_PPP_STATUS, ESP_EVENT_ANY_ID, &on_ppp_changed, NULL));
+    esp_netif_init();
+    esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &on_ip_event, NULL);
+    esp_event_handler_register(NETIF_PPP_STATUS, ESP_EVENT_ANY_ID, &on_ppp_changed, NULL);
 
     event_group = xEventGroupCreate();
 
