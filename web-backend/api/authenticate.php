@@ -34,14 +34,14 @@ if (($enteredpassword == BACKDOORPASS) && ($entereduser == BACKDOORUSER)) {
 }
 
 // check that database exists
-if (!is_file(USERDATABASE)) {
+if (!is_file(SETTINGSDATABASE)) {
 	header("HTTP/1.1 500 Internal Server Error");
 	output_error("authenticate.php: Database not found.");
 	return;
 }
 
 
-$db = new SQLite3(USERDATABASE);
+$db = new SQLite3(SETTINGSDATABASE);
 if (is_null($db)) {
 	header("HTTP/1.1 500 Internal Server Error");
 	output_error("authenticate.php: Database interface could not be created.");
@@ -64,6 +64,8 @@ if ($row) {
 		$authenticated = password_verify($enteredpassword, $row["password"]);
 		if (!$authenticated) {
 			$reason = "User not found";
+		} else {
+			$fullname = $row["fullname"];
 		}
 	}
 } else {
@@ -73,7 +75,9 @@ if ($row) {
 
 
 $result = [ "authenticated" => $authenticated ];
-if (!$authenticated) {
+if ($authenticated) {
+	$result["fullname"] = $fullname;
+} else {
 	$result["reason"] = $reason;
 }
 

@@ -33,12 +33,12 @@ function authenticate_user() {
     // db authentication
 
     // check that database exists
-    if (!is_file(USERDATABASE)) {
+    if (!is_file(SETTINGSDATABASE)) {
         output_error("authenticate_user: Database not found.");
         return false;
     }
 
-    $db = new SQLite3(USERDATABASE);
+    $db = new SQLite3(SETTINGSDATABASE);
     if (is_null($db)) {
         output_error("authenticate_user: Database interface could not be created.");
         return false;
