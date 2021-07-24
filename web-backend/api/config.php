@@ -11,13 +11,13 @@ if ($_SERVER['ENV'] == "dev") {
     // development environment
     define('DATABASE', __ROOT__.'/photos/photos.db');
     define('CELLDATABASE', __ROOT__.'/db/cell.db');
-    define('USERDATABASE', __ROOT__.'/db/users.db');
+    define('SETTINGSDATABASE', __ROOT__.'/db/settings.db');
     define('PHOTODIR', __ROOT__.'/photos/');
 } else {
     // production envrionment
     define('DATABASE', '/var/www/webcam/photos/photos.db');
     define('CELLDATABASE', '/var/www/webcam/db/cell.db');
-    define('USERDATABASE', '/var/www/webcam/db/users.db');
+    define('SETTINGSDATABASE', '/var/www/webcam/db/settings.db');
     define('PHOTODIR', '/var/www/webcam/photos/');
 }
 
