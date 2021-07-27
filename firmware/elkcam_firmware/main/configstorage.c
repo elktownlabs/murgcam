@@ -63,6 +63,7 @@ static esp_err_t read_cam_config(camera_config_t* data)
     data->auto_exposure = CAM_DEFAULT_AUTO_EXPOSURE;
     data->light_mode = CAM_DEFAULT_LIGHT_MODE;
     data->color_saturation = CAM_DEFAULT_COLOR_SATURATION;
+    data->pixeltiming = CAM_DEFAULT_PIXELTIMING;
     data->brightness = CAM_DEFAULT_BRIGHTNESS;
     data->contrast = CAM_DEFAULT_CONTRAST;
     data->hue = CAM_DEFAULT_HUE;
@@ -89,6 +90,10 @@ static esp_err_t read_cam_config(camera_config_t* data)
     data->color_saturation = CAM_DEFAULT_COLOR_SATURATION;
     err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_COLOR_SATURATION, &data->color_saturation);
     log_read_result(err, &global_err, "Cam Config: color saturation");
+
+    data->pixeltiming = CAM_DEFAULT_PIXELTIMING;
+    err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_PIXELTIMING, &data->pixeltiming);
+    log_read_result(err, &global_err, "Cam Config: pixel timing");
 
     data->brightness = CAM_DEFAULT_BRIGHTNESS;
     err = nvs_get_u8(handle, CONFIGSTORAGE_KEY_CAM_BRIGHTNESS, &data->brightness);
@@ -142,6 +147,10 @@ static esp_err_t write_cam_config(camera_config_t* data)
     if (data->color_saturation > 9) data->color_saturation = 9;
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_COLOR_SATURATION, data->color_saturation);
     log_write_result(err, &global_err, "Cam Config: color saturation");
+
+    if (data->pixeltiming > 0x0e) data->pixeltiming = 0x0e;
+    err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_PIXELTIMING, data->pixeltiming);
+    log_write_result(err, &global_err, "Cam Config: pixel timing");
 
     if (data->brightness > 9) data->brightness = 9;
     err = nvs_set_u8(handle, CONFIGSTORAGE_KEY_CAM_BRIGHTNESS, data->brightness);

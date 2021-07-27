@@ -1031,10 +1031,8 @@ void OV2640_Mirror_Set(uint8_t h, uint8_t v)
 {
     SCCB_Write(SCCB_ID, 0xFF, 0x01);
     uint8_t temp = SCCB_Read(SCCB_ID, OV2640_SENSOR_REG04);
-    ESP_LOGI(TAG, "before :%x", temp);
     if (h) temp |= 0x80; else temp &= ~0x80;
     if (v) temp |= 0x40; else temp &= ~0x40;
-    ESP_LOGI(TAG, "after :%x", temp);
     SCCB_Write(SCCB_ID, OV2640_SENSOR_REG04, temp);
 }
 
@@ -1043,4 +1041,25 @@ void OV2640_Quality(uint8_t q)
     if (q > 63) q = 63;
     SCCB_Write(SCCB_ID ,0xFF, 0x00);
     SCCB_Write(SCCB_ID ,OV2640_DSP_Qs, q);
+}
+
+
+void OV2640_GainControlCeiling(uint8_t c)
+{
+    if (c > 7) c = 7;
+    c = c << 5;
+    SCCB_Write(SCCB_ID, 0xFF, 0x01);
+    uint8_t temp = SCCB_Read(SCCB_ID, OV2640_SENSOR_COM9);
+    c = (temp & 0x1f) | c;
+    SCCB_Write(SCCB_ID, OV2640_SENSOR_COM9, temp);
+
+}
+
+
+void OV2650_PixelTiming(uint8_t t)
+{
+    if (t > 0x0e) t = 0x0e;
+    SCCB_Write(SCCB_ID ,0xFF, 0x01);
+    uint8_t temp = SCCB_Read(SCCB_ID, OV2640_SENSOR_CLKRC);
+    SCCB_Write(SCCB_ID ,OV2640_SENSOR_CLKRC, temp | t);
 }

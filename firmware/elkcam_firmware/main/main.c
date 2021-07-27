@@ -200,7 +200,7 @@ void app_main(void)
             ESP_LOGI(TAG, "Taking picture. Try %i of 5", i);
             camhandler_load_config_from_nvs();
             cam_start();
-            upload_data.buflen = cam_take(&upload_data.bufptr, 5000 / portTICK_PERIOD_MS);
+            upload_data.buflen = cam_take(&upload_data.bufptr, 8000 / portTICK_PERIOD_MS);
             if (upload_data.buflen == 0) {
                 ESP_LOGE(TAG, "Camera timed out");
                 upload_data.error = 1;

@@ -7,6 +7,7 @@
 
 typedef struct {
     uint8_t quality; /* 0 - 63 */
+    uint8_t pixeltiming; /* 0 - 30 */
     uint8_t auto_exposure; /* 0 - 4 */
     uint8_t light_mode; /* 0 - 4 */
     uint8_t color_saturation;

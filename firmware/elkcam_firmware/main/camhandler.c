@@ -69,6 +69,8 @@ void camhandler_load_config_from_nvs()
 
     ESP_LOGI(TAG, "Configuring camera to global config settings");
     camera_config_t* config = config_cam();
+    OV2650_PixelTiming(config->pixeltiming);
+    ESP_LOGI(TAG, "Setting pixel timing to %d", config->pixeltiming);
     OV2640_Quality(config->quality);
     ESP_LOGI(TAG, "Setting picture quality to %d", config->quality);
     OV2640_Auto_Exposure(config->auto_exposure);
@@ -85,6 +87,8 @@ void camhandler_load_config_from_nvs()
     ESP_LOGI(TAG, "Setting hue to %d", config->hue);
     OV2640_Sharpness(config->sharpness);
     ESP_LOGI(TAG, "Setting sharpness to %d", config->sharpness);
+    OV2640_Mirror_Set(0, 1);
+    ESP_LOGI(TAG, "Setting flip/mirror to 0");
 }
 
 esp_err_t init_cam()

@@ -15,6 +15,10 @@
 /* 0: -2, 1: -1, 2:  0, 3: +1, 4: +2 */
 #define CONFIGSTORAGE_KEY_CAM_COLOR_SATURATION "cam_col_sat"
 
+/* camera pixel clock divider */
+/* 0 - 0x0e */
+#define CONFIGSTORAGE_KEY_CAM_PIXELTIMING "cam_pixtiming"
+
 /* camera brightness, integer 0 - 4 */
 /* 0: -2, 1: -1, 2:  0, 3: +1, 4: +2 */
 #define CONFIGSTORAGE_KEY_CAM_BRIGHTNESS "cam_brightnss"
