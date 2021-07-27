@@ -339,6 +339,14 @@
                 <input type="range" id="cam_quality" min="10" max="63" value="10" class="default-action" title="Lower is Better">
                 <div class="range-max">63</div>
               </div>
+              <div class="input-group" id="pixeltiming-group">
+                <label for="cam_pixeltiming">Pixel Timing</label>
+                <div class="range-min">0</div>
+                <!-- Note; the following element is 'flipped' in CSS so that it slides from High to Low
+                     As a result the 'min' and 'max' values are reversed here too -->
+                <input type="range" id="cam_pixeltiming" min="0" max="14" value="10" class="default-action" title="Lower is Better">
+                <div class="range-max">14</div>
+              </div>
               <div class="input-group" id="autoexposure-group">
                 <label for="cam_auto_exposure">Auto Exposure</label>
                 <div class="range-min">0</div>
@@ -407,8 +415,8 @@
                 <label for="cell_apn_auth">Cell APN Auth</label>
                 <select id="cell_apn_auth" class="default-action">
                   <option value="0" selected="selected">None</option>
-                  <option value="1">CHAP</option>
-                  <option value="2">PAP</option>
+                  <option value="1">PAP</option>
+                  <option value="2">CHAP</option>
                 </select>
               </div>
               <div class="input-group" id="cellremoteaddress-group">

@@ -269,7 +269,11 @@ esp_err_t OV2640_ImageSize_Set(uint16_t width, uint16_t height);
 
 void OV2640_Mirror_Set(uint8_t h, uint8_t v);
 void OV2640_Quality(uint8_t q);
+void OV2640_GainControlCeiling(uint8_t c);
+void OV2650_PixelTiming(uint8_t t);
+
 
 #ifdef __cplusplus
 }
 #endif
+

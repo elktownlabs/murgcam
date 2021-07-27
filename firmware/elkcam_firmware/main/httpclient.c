@@ -90,6 +90,11 @@ static void update_config_from_json(cJSON* json)
         ESP_LOGI(TAG, "Updating cam_color_saturation to %d", data->valueint);
         cam_conf.color_saturation = data->valueint;
     }
+    data = cJSON_GetObjectItemCaseSensitive(json, "cam_pixeltiming");
+    if (cJSON_IsNumber(data)) {
+        ESP_LOGI(TAG, "Updating cam_pixeltiming to %d", data->valueint);
+        cam_conf.pixeltiming = data->valueint;
+    }
     data = cJSON_GetObjectItemCaseSensitive(json, "cam_brightness");
     if (cJSON_IsNumber(data)) {
         ESP_LOGI(TAG, "Updating cam_brightness to %d", data->valueint);
@@ -272,6 +277,7 @@ esp_err_t send_data(mbedtls_ssl_context* ssl, https_upload_t* content)
     cJSON_AddNumberToObject(camSettings, "cam_auto_exposure",  cam_conf.auto_exposure);
     cJSON_AddNumberToObject(camSettings, "cam_light_mode",  cam_conf.light_mode);
     cJSON_AddNumberToObject(camSettings, "cam_color_saturation",  cam_conf.color_saturation);
+    cJSON_AddNumberToObject(camSettings, "cam_pixeltiming",  cam_conf.pixeltiming);
     cJSON_AddNumberToObject(camSettings, "cam_brightness",  cam_conf.brightness);
     cJSON_AddNumberToObject(camSettings, "cam_contrast",  cam_conf.contrast);
     cJSON_AddNumberToObject(camSettings, "cam_hue",  cam_conf.hue);
