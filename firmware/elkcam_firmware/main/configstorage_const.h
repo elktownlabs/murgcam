@@ -65,6 +65,10 @@
 /* by server, integer */
 #define CONFIGSTORAGE_KEY_SYS_SECS_BETWEEN_PHOTOS "sys_t_btw_phts"
 
+/* default minimum voltage when photos are no longer taken */
+#define CONFIGSTORAGE_KEY_SYS_MIN_VOLTAGE "sys_min_v"
+
+
 /* photos taken. This cannot be reset by firmware, integer */
 #define CONFIGSTORAGE_KEY_SYS_PHOTO_COUNTER "sys_p_counter"
 
