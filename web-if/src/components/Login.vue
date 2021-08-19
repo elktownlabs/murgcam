@@ -42,7 +42,7 @@
     name: "Login",
     methods: {
       login: function() {
-        axios.get('https://wwv-schwarzwald.de/webcam/api/authenticate?user='+this.loginUser+'&password='+this.loginPassword)
+        axios.get(process.env['VUE_APP_BACKENDURL']+'/authenticate?user='+this.loginUser+'&password='+this.loginPassword)
         .then(response => {
           if (response.data.authenticated) {
             let authdata = {

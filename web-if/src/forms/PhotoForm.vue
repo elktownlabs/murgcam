@@ -41,6 +41,7 @@ export default {
     photo: null,
     photoidx: null,
     authenticated: false,
+    updateInterval: null
   }),
   methods: {
     nextPhoto: function() {
@@ -60,7 +61,7 @@ export default {
     },
     loadDay: function(date) {
       let dateStr = date.toISOString({ timeZone: 'Europe/Berlin' }).substr(0, 10)
-      axios.get('https://wwv-schwarzwald.de/webcam/api/photos_per_day?date='+dateStr,
+      axios.get(process.env['VUE_APP_BACKENDURL']+'/photos_per_day?date='+dateStr,
         { auth: {
           username: store.getters.currentUser,
           password: store.getters.currentPassword
@@ -85,6 +86,13 @@ export default {
         this.photo = null
       }
     }
+  },
+  created() {
+    this.updateInterval = setInterval(function() { this.loadDay(new Date(this.day)) }.bind(this), 30000)
+  },
+  destroyed() {
+    console.log(this.updateInterval)
+    clearInterval(this.updateInterval)
   },
   mounted () {
     // load photos
