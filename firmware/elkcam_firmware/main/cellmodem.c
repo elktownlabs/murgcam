@@ -143,7 +143,7 @@ _Bool init_cellmodem(cell_config_t* cellConfig)
     ESP_LOGI(TAG, "Init SIM800");
 
     modem_dce_t *dce = NULL;
-    int numRetries = 30;
+    int numRetries = 100;
     while ((!dce) && (numRetries-- > 0)) {
         dce = sim800_init(dte);
         if (!dce) {
