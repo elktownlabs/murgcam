@@ -175,6 +175,30 @@ EXIT:
 }
 
 
+int check_voltage()
+{
+    system_config_t* system_config = config_system();
+    double vsupply;
+
+    esp_err_t err = ina226_get_startup_values(&vsupply, 0x00, 0x00, 0x00);
+    if (err == ESP_OK) {
+        /* voltage */
+        if (vsupply * 1000 >= (double)system_config->min_voltage) {
+            ESP_LOGI(TAG, "Supply voltage currently at: %.4fmV. We need at least %dmV to continue.",
+                vsupply * 1000.0, system_config->min_voltage);
+            return pdTRUE;
+        } else {
+            ESP_LOGE(TAG, "Supply voltage currently at: %.4fmV. We need at least %dmV to continue.",
+                vsupply * 1000.0, system_config->min_voltage);
+            return pdFALSE;
+        }
+    } else {
+        ESP_LOGE(TAG, "Voltages could not be read from sensor (%x)", err);
+        return pdFALSE;
+    }
+}
+
+
 void app_main(void)
 {
     boot_msg();
@@ -187,6 +211,19 @@ void app_main(void)
     int startup_mode = check_for_config_mode();
 
     if (startup_mode == MODE_NORMAL) {
+
+        /* make sure voltage is above minimum to not damage battery */
+        if (!check_voltage()) {
+            /* power down ina226 */
+            ina226_mode_shutdown();
+
+            /* go to sleep for 1h */
+            ESP_LOGE(TAG, "Going to sleep for one hour.");
+            uint64_t time_to_sleep = (60u * 60u * 1000u * 1000u); /* 1 h */
+            esp_sleep_enable_timer_wakeup(time_to_sleep);
+            esp_deep_sleep_start();
+        }
+
         /* create the semaphore for waiting until upload to server is complete */
         sm_uploadeComplete = xSemaphoreCreateBinary();
 

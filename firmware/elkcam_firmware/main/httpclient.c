@@ -70,6 +70,11 @@ static void update_config_from_json(cJSON* json)
         ESP_LOGI(TAG, "Updating sys_secs_between_photos to %d", data->valueint);
         sys_conf.secs_between_photos = data->valueint;
     }
+    data = cJSON_GetObjectItemCaseSensitive(json, "sys_minimum_voltage");
+    if (cJSON_IsNumber(data)) {
+        ESP_LOGI(TAG, "Updating sys_minumum_voltage to %d", data->valueint);
+        sys_conf.min_voltage = data->valueint;
+    }
     data = cJSON_GetObjectItemCaseSensitive(json, "cam_quality");
     if (cJSON_IsNumber(data)) {
         ESP_LOGI(TAG, "Updating cam_quality to %d", data->valueint);
@@ -273,6 +278,7 @@ esp_err_t send_data(mbedtls_ssl_context* ssl, https_upload_t* content)
     system_config_t sys_conf = *(config_system());
     cell_config_t cell_conf = *(config_cell());
     cJSON_AddNumberToObject(camSettings, "sys_secs_between_photos",  sys_conf.secs_between_photos);
+    cJSON_AddNumberToObject(camSettings, "sys_minimum_voltage",  sys_conf.min_voltage);
     cJSON_AddNumberToObject(camSettings, "cam_quality",  cam_conf.quality);
     cJSON_AddNumberToObject(camSettings, "cam_auto_exposure",  cam_conf.auto_exposure);
     cJSON_AddNumberToObject(camSettings, "cam_light_mode",  cam_conf.light_mode);

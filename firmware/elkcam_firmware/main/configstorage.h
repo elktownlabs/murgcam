@@ -31,6 +31,7 @@ typedef struct {
 
 typedef struct {
     uint16_t secs_between_photos;
+    uint16_t min_voltage;
     uint32_t photo_counter;
 } system_config_t;
 

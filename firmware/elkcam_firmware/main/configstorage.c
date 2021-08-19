@@ -284,6 +284,7 @@ static esp_err_t read_system_config(system_config_t* data)
 
     /* set defaults */
     data->secs_between_photos = SYS_DEFAULT_SECS_BETWEEN_PHOTOS;
+    data->min_voltage = SYS_DEFAULT_MIN_VOLTAGE;
     data->photo_counter = 0;
 
     /* open nvs */
@@ -296,6 +297,9 @@ static esp_err_t read_system_config(system_config_t* data)
 
     err = nvs_get_u16(handle, CONFIGSTORAGE_KEY_SYS_SECS_BETWEEN_PHOTOS, &data->secs_between_photos);
     log_read_result(err, &global_err, "System Config: secs between photos");
+
+    err = nvs_get_u16(handle, CONFIGSTORAGE_KEY_SYS_MIN_VOLTAGE, &data->min_voltage);
+    log_read_result(err, &global_err, "System Config: minimum voltage");
 
     err = nvs_get_u32(handle, CONFIGSTORAGE_KEY_SYS_PHOTO_COUNTER, &data->photo_counter);
     log_read_result(err, &global_err, "System Config: photo counter");
@@ -322,6 +326,9 @@ static esp_err_t write_system_config(system_config_t* data)
 
     err = nvs_set_u16(handle, CONFIGSTORAGE_KEY_SYS_SECS_BETWEEN_PHOTOS, data->secs_between_photos);
     log_write_result(err, &global_err, "System Config: secs between photos");
+
+    err = nvs_set_u16(handle, CONFIGSTORAGE_KEY_SYS_MIN_VOLTAGE, data->min_voltage);
+    log_write_result(err, &global_err, "System Config: minimum voltage");
 
     data->photo_counter = 0;
     err = nvs_set_u32(handle, CONFIGSTORAGE_KEY_SYS_PHOTO_COUNTER, data->photo_counter);

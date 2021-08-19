@@ -443,6 +443,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
     cJSON_AddStringToObject(root, "cell_remote_address", cell_conf->remote_address);
     cJSON_AddStringToObject(root, "cell_remote_url", cell_conf->remote_url);
     cJSON_AddNumberToObject(root, "sys_secs_between_photos", sys_conf->secs_between_photos);
+    cJSON_AddNumberToObject(root, "sys_minimum_voltage", sys_conf->min_voltage);
 
     /* Get header value string length and allocate memory for length + 1,
      * extra byte for null termination */
@@ -595,6 +596,11 @@ static esp_err_t config_set_handler(httpd_req_t *req)
     if (cJSON_IsNumber(value)) {
         ESP_LOGI(TAG, "Setting secs between photos to %d", value->valueint);
         sys_conf.secs_between_photos = value->valueint;
+    }
+    value = cJSON_GetObjectItemCaseSensitive(config_json, "sys_minimum_voltage");
+    if (cJSON_IsNumber(value)) {
+        ESP_LOGI(TAG, "Setting minimum voltage to %d", value->valueint);
+        sys_conf.min_voltage = value->valueint;
     }
 
     config_write_values(&sys_conf, &cell_conf, &cam_conf);

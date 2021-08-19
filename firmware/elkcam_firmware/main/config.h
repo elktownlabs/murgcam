@@ -30,6 +30,7 @@
 
 /* default system settings */
 #define SYS_DEFAULT_SECS_BETWEEN_PHOTOS (30*60)
+#define SYS_DEFAULT_MIN_VOLTAGE (10300) /* 10.3V (10.4V for LiFePo4 and some margin for measuring errors) */
 
 
 #endif
