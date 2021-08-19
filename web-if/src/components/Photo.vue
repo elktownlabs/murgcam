@@ -181,7 +181,7 @@
         this.photoData = null
         if (store.getters.isAuthenticated) {
           let queryStr = 'id='+id
-          axios.get('https://wwv-schwarzwald.de/webcam/api/photo?'+queryStr+"&base64",
+          axios.get(process.env['VUE_APP_BACKENDURL']+'/photo?'+queryStr+"&base64",
             { auth: {
                 username: store.getters.currentUser,
                 password: store.getters.currentPassword

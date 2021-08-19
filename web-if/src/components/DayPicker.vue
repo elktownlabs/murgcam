@@ -32,7 +32,7 @@
       },
       loadDaysWithPictures: function(year, month) {
         let dateStr = "year="+year+"&month="+month
-        axios.get('https://wwv-schwarzwald.de/webcam/api/photos_per_month?'+dateStr,
+        axios.get(process.env['VUE_APP_BACKENDURL']+'/photos_per_month?'+dateStr,
           { auth: {
             username: store.getters.currentUser,
             password: store.getters.currentPassword

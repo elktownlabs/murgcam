@@ -189,7 +189,7 @@ export default {
       }
       console.log(JSON.stringify(newConfig))
       // post to backend
-      axios.post('https://wwv-schwarzwald.de/webcam/api/set_config', JSON.stringify(newConfig), {
+      axios.post(process.env['VUE_APP_BACKENDURL']+'/set_config', JSON.stringify(newConfig), {
         auth: {
             username: store.getters.currentUser,
             password: store.getters.currentPassword
@@ -206,7 +206,7 @@ export default {
     }
   },
   mounted () {
-    axios.get('https://wwv-schwarzwald.de/webcam/api/get_config', {
+    axios.get(process.env['VUE_APP_BACKENDURL']+'/get_config', {
       auth: {
           username: store.getters.currentUser,
           password: store.getters.currentPassword

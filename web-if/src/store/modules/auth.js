@@ -25,17 +25,19 @@ import {
       [AUTH_REQUEST]: ({ commit }, user) => {
         return new Promise((resolve, reject) => {
           commit(AUTH_REQUEST);
-          axios.get('https://wwv-schwarzwald.de/webcam/api/authenticate?user='+user.user+'&password='+user.password)
+          axios.get(process.env['VUE_APP_BACKENDURL']+'/authenticate?user='+user.user+'&password='+user.password)
             .then(resp => {
               if (resp.data.authenticated) {
                 localStorage.setItem("wwv-webcam.user", user.user);
                 localStorage.setItem("wwv-webcam.pass", user.password);
+                localStorage.setItem("wwv-webcam.fullname", user.fullname);
                 commit(AUTH_SUCCESS, user);
                 resolve(resp);
               } else {
                 commit(AUTH_ERROR, resp);
                 localStorage.removeItem("wwv-webcam.user");
                 localStorage.removeItem("wwv-webcam.pass");
+                localStorage.removeItem("wwv-webcam.fullname");
                 reject(resp);
               }
             })
