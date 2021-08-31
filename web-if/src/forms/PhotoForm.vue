@@ -61,11 +61,8 @@ export default {
     },
     loadDay: function(date) {
       let dateStr = date.toISOString({ timeZone: 'Europe/Berlin' }).substr(0, 10)
-      axios.get(process.env['VUE_APP_BACKENDURL']+'/photos_per_day?date='+dateStr,
-        { auth: {
-          username: store.getters.currentUser,
-          password: store.getters.currentPassword
-      }}).then(response => {
+      axios.post(process.env['VUE_APP_BACKENDURL']+'/photos_per_day', { date: dateStr, token: store.getters.currentToken },
+      ).then(response => {
         this.photos = response.data
         this.photoidx = this.photos.length - 1
         this.photo = this.photos[this.photoidx]

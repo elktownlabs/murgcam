@@ -31,12 +31,9 @@
         this.$emit('input', val)
       },
       loadDaysWithPictures: function(year, month) {
-        let dateStr = "year="+year+"&month="+month
-        axios.get(process.env['VUE_APP_BACKENDURL']+'/photos_per_month?'+dateStr,
-          { auth: {
-            username: store.getters.currentUser,
-            password: store.getters.currentPassword
-        }}).then(response => {
+        axios.post(process.env['VUE_APP_BACKENDURL']+'/photos_per_month',
+        { year: year, month: month, token: store.getters.currentToken}
+      ).then(response => {
           this.daysWithPhotos = []
           response.data.forEach(element => {
             this.daysWithPhotos.push(element.substr(0,10))
