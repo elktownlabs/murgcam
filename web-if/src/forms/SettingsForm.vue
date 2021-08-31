@@ -3,116 +3,165 @@
     <h2 class="py-4">Modify Camera Settings</h2>
     <v-alert v-if="error != null" border="top" color="red lighten-2" dark>{{ error }}</v-alert>
     <v-form v-if="loaded" ref="form">
-    <v-toolbar color="indigo" dark flat dense>
+    <v-toolbar color="primary" dark flat dense>
       <v-tabs v-model="tab">
           <v-spacer/>
           <v-tab value="picture">Picture</v-tab>
-          <v-tab value="upload">Upload</v-tab>
+          <v-tab value="timing">Timing</v-tab>
+          <v-tab value="cellconnection">Cell Connection</v-tab>
           <v-spacer/>
       </v-tabs>
     </v-toolbar>
     <v-tabs-items v-model="tab">
       <v-tab-item key="picture">
-        <v-card class="pt-6" color="grey lighten-3" flat>
+        <v-card class="pt-8" color="grey lighten-3" flat>
           <v-container>
             <v-row>
-              <v-col>
-                <v-slider :color="hasChanged('cam_quality') ? 'red' : 'indigo'" v-model="parameters['cam_quality'].modifiedValue" thumb-label min="10" max="63" label="Quality"></v-slider>
+              <v-col cols="12">
+                <v-header class="pl-0">Quality</v-header>
+                <div class="d-flex flex-row">
+                  <v-slider :color="hasChanged('cam_quality') ? 'red' : 'primary'" v-model="parameters['cam_quality'].modifiedValue" min="10" max="63"></v-slider>
+                  <v-chip @click:close="revert('cam_quality')" :text-color="hasChanged('cam_quality') ? 'white' : null" :color="hasChanged('cam_quality') ? 'red' : 'primary'" :close="hasChanged('cam_quality')" class="ml-2">{{ parameters['cam_quality'].modifiedValue }}</v-chip>
+                </div>
               </v-col>
             </v-row>
-          </v-container>
-          <v-container>
             <v-row>
-              <v-col>
-                <v-slider :color="hasChanged('cam_auto_exposure') ? 'red' : 'indigo'" v-model="parameters['cam_auto_exposure'].modifiedValue" thumb-label min="0" max="4" label="Auto Exposure" />
+              <v-col cols="12">
+                <v-header class="pl-0">Auto Exposure</v-header>
+                <div class="d-flex flex-row">
+                  <v-slider :color="hasChanged('cam_auto_exposure') ? 'red' : 'primary'" v-model="parameters['cam_auto_exposure'].modifiedValue" min="0" max="4"></v-slider>
+                  <v-chip @click:close="revert('cam_auto_exposure')" :text-color="hasChanged('cam_auto_exposure') ? 'white' : null" :color="hasChanged('cam_auto_exposure') ? 'red' : 'primary'" :close="hasChanged('cam_auto_exposure')" class="ml-2">{{ parameters['cam_auto_exposure'].modifiedValue }}</v-chip>
+                </div>
               </v-col>
             </v-row>
-          </v-container>
-          <v-container>
             <v-row>
-              <v-col>
-                <v-select :color="hasChanged('cam_light_mode') ? 'red' : 'indigo'" v-model="parameters['cam_light_mode'].modifiedValue" :items="whitebalance_modes"  label="White Balance Mode" />
+              <v-col cols="6">
+                <div class="d-flex flex-row">
+                  <v-select :color="hasChanged('cam_light_mode') ? 'red' : 'primary'" v-model="parameters['cam_light_mode'].modifiedValue" :items="whitebalance_modes"  label="White Balance Mode" />
+                  <v-btn @click="revert('cam_light_mode')" v-if="hasChanged('cam_light_mode')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
               </v-col>
             </v-row>
-          </v-container>
-          <v-container>
             <v-row>
-              <v-col>
-                <v-slider :color="hasChanged('cam_brightness') ? 'red' : 'indigo'" v-model="parameters['cam_brightness'].modifiedValue" thumb-label min="0" max="9" label="Brightness" />
+              <v-col cols="12">
+                <v-header class="pl-0">Brightness</v-header>
+                <div class="d-flex flex-row">
+                  <v-slider :color="hasChanged('cam_brightness') ? 'red' : 'primary'" v-model="parameters['cam_brightness'].modifiedValue" min="0" max="9"></v-slider>
+                  <v-chip @click:close="revert('cam_brightness')" :text-color="hasChanged('cam_brightness') ? 'white' : null" :color="hasChanged('cam_brightness') ? 'red' : 'primary'" :close="hasChanged('cam_brightness')" class="ml-2">{{ parameters['cam_brightness'].modifiedValue }}</v-chip>
+                </div>
               </v-col>
             </v-row>
-          </v-container>
-          <v-container>
             <v-row>
-              <v-col>
-                <v-slider :color="hasChanged('cam_contrast') ? 'red' : 'indigo'" v-model="parameters['cam_contrast'].modifiedValue" thumb-label min="0" max="9" label="Contrast" />
+              <v-col cols="12">
+                <v-header class="pl-0">Contrast</v-header>
+                <div class="d-flex flex-row">
+                  <v-slider :color="hasChanged('cam_contrast') ? 'red' : 'primary'" v-model="parameters['cam_contrast'].modifiedValue" min="0" max="9"></v-slider>
+                  <v-chip @click:close="revert('cam_contrast')" :text-color="hasChanged('cam_contrast') ? 'white' : null" :color="hasChanged('cam_contrast') ? 'red' : 'primary'" :close="hasChanged('cam_contrast')" class="ml-2">{{ parameters['cam_contrast'].modifiedValue }}</v-chip>
+                </div>
               </v-col>
             </v-row>
-          </v-container>
-          <v-container>
             <v-row>
-              <v-col>
-                <v-slider :color="hasChanged('cam_hue') ? 'red' : 'indigo'" v-model="parameters['cam_hue'].modifiedValue" thumb-label min="0" max="5" label="Hue" />
+              <v-col cols="12">
+                <v-header class="pl-0">Hue</v-header>
+                <div class="d-flex flex-row">
+                  <v-slider :color="hasChanged('cam_hue') ? 'red' : 'primary'" v-model="parameters['cam_hue'].modifiedValue" min="0" max="5"></v-slider>
+                  <v-chip @click:close="revert('cam_hue')" :text-color="hasChanged('cam_hue') ? 'white' : null" :color="hasChanged('cam_hue') ? 'red' : 'primary'" :close="hasChanged('cam_hue')" class="ml-2">{{ parameters['cam_hue'].modifiedValue }}</v-chip>
+                </div>
               </v-col>
             </v-row>
-          </v-container>
-          <v-container>
             <v-row>
-              <v-col>
-                <v-slider :color="hasChanged('cam_sharpness') ? 'red' : 'indigo'" v-model="parameters['cam_sharpness'].modifiedValue" thumb-label min="0" max="7" label="Sharpness" />
+              <v-col cols="12">
+                <v-header class="pl-0">Sharpness</v-header>
+                <div class="d-flex flex-row">
+                  <v-slider :color="hasChanged('cam_sharpness') ? 'red' : 'primary'" v-model="parameters['cam_sharpness'].modifiedValue" min="0" max="7"></v-slider>
+                  <v-chip @click:close="revert('cam_sharpness')" :text-color="hasChanged('cam_sharpness') ? 'white' : null" :color="hasChanged('cam_sharpness') ? 'red' : 'primary'" :close="hasChanged('cam_sharpness')" class="ml-2">{{ parameters['cam_sharpness'].modifiedValue }}</v-chip>
+                </div>
               </v-col>
             </v-row>
           </v-container>
         </v-card>
       </v-tab-item>
-      <v-tab-item key="upload">
+
+      <v-tab-item key="timing">
+        <v-card class="pt-6" color="grey lighten-3" flat>
+          <v-container>
+            <v-row>
+              <v-col cols="6">
+                <v-text-field class="my-0 pb-0" :color="hasChanged('sys_secs_between_photos') ? 'red' : 'primary'" v-model="parameters['sys_secs_between_photos'].modifiedValue" label="Seconds between Uploads in Regular Mode" />
+                <div class="my-0 pt-0 subtitle-2 red--text">This value has changed. The camera is currently operating with the value 1799.</div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="6">
+                <v-menu ref="menu_first_photo" v-model="first_photo_menu" :close-on-content-click="false" :nudge-right="40" :return-value.sync="first_photo_time" transition="scale-transition" offset-y max-width="290px" min-width="290px">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field v-model="first_photo_time" label="Time of First Photo" prepend-icon="mdi-clock-time-four-outline" readonly v-bind="attrs" v-on="on"/>
+                  </template>
+                  <v-time-picker ampm-in-title v-if="first_photo_menu" v-model="first_photo_time" :allowed-minutes="timepicker_allowed_minutes" full-width @click:minute="$refs.menu_first_photo.save(first_photo_time)"/>
+                </v-menu>
+              </v-col>
+              <v-col cols="6">
+                <v-menu ref="menu_last_photo" v-model="last_photo_menu" :close-on-content-click="false" :nudge-right="40" :return-value.sync="last_photo_time" transition="scale-transition" offset-y max-width="290px" min-width="290px">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field v-model="last_photo_time" label="Time of Last Photo" prepend-icon="mdi-clock-time-four-outline" readonly v-bind="attrs" v-on="on"/>
+                  </template>
+                  <v-time-picker ampm-in-title v-if="last_photo_menu" v-model="last_photo_time" :allowed-minutes="timepicker_allowed_minutes" full-width @click:minute="$refs.menu_last_photo.save(last_photo_time)"/>
+                </v-menu>
+              </v-col>
+            </v-row>
+          </v-container>
+
+
+        </v-card>
+      </v-tab-item>
+      <v-tab-item key="cellconnection">
         <v-card class="pt-6" color="grey lighten-3" flat>
           <v-container>
             <v-row>
               <v-col>
-                <v-text-field :color="hasChanged('cell_remote_url') ? 'red' : 'indigo'" v-model="parameters['cell_remote_url'].modifiedValue" label="Upload URL" />
+                <v-text-field :color="hasChanged('cell_remote_url') ? 'red' : 'primary'" v-model="parameters['cell_remote_url'].modifiedValue" label="Upload URL" />
               </v-col>
             </v-row>
           </v-container>
           <v-container>
             <v-row>
               <v-col>
-                <v-text-field :color="hasChanged('cell_pin') ? 'red' : 'indigo'" v-model="parameters['cell_pin'].modifiedValue" :rules="pinRules" label="SIM PIN" />
+                <v-text-field :color="hasChanged('cell_pin') ? 'red' : 'primary'" v-model="parameters['cell_pin'].modifiedValue" :rules="pinRules" label="SIM PIN" />
               </v-col>
             </v-row>
           </v-container>
           <v-container>
             <v-row>
               <v-col>
-                <v-text-field :color="hasChanged('cell_apn') ? 'red' : 'indigo'" v-model="parameters['cell_apn'].modifiedValue" label="APN" />
+                <v-text-field :color="hasChanged('cell_apn') ? 'red' : 'primary'" v-model="parameters['cell_apn'].modifiedValue" label="APN" />
               </v-col>
             </v-row>
           </v-container>
           <v-container>
             <v-row>
               <v-col>
-                <v-text-field :color="hasChanged('cell_apn_user') ? 'red' : 'indigo'" v-model="parameters['cell_apn_user'].modifiedValue" label="APN User" />
+                <v-text-field :color="hasChanged('cell_apn_user') ? 'red' : 'primary'" v-model="parameters['cell_apn_user'].modifiedValue" label="APN User" />
               </v-col>
             </v-row>
           </v-container>
           <v-container>
             <v-row>
               <v-col>
-                <v-text-field :color="hasChanged('cell_apn_pass') ? 'red' : 'indigo'" v-model="parameters['cell_apn_pass'].modifiedValue" label="APN Password" />
+                <v-text-field :color="hasChanged('cell_apn_pass') ? 'red' : 'primary'" v-model="parameters['cell_apn_pass'].modifiedValue" label="APN Password" />
               </v-col>
             </v-row>
           </v-container>
           <v-container>
             <v-row>
               <v-col>
-                <v-select :color="hasChanged('cell_apn_auth') ? 'red' : 'indigo'" v-model="parameters['cell_apn_auth'].modifiedValue" :items="apnauth_modes"  label="APN Auth Type" />
+                <v-select :color="hasChanged('cell_apn_auth') ? 'red' : 'primary'" v-model="parameters['cell_apn_auth'].modifiedValue" :items="apnauth_modes"  label="APN Auth Type" />
               </v-col>
             </v-row>
           </v-container>
           <v-container>
             <v-row>
               <v-col>
-                <v-text-field :color="hasChanged('sys_secs_between_photos') ? 'red' : 'indigo'" v-model="parameters['sys_secs_between_photos'].modifiedValue" label="Seconds between Uploads" />
+                <v-text-field :color="hasChanged('sys_secs_between_photos') ? 'red' : 'primary'" v-model="parameters['sys_secs_between_photos'].modifiedValue" label="Seconds between Uploads" />
               </v-col>
             </v-row>
           </v-container>
@@ -120,8 +169,7 @@
       </v-tab-item>
     </v-tabs-items>
     <v-card class="float-right my-4" flat>
-      <v-btn dark color="indigo" @click="apply">Save and Upload during next Cycle</v-btn>
-      <v-btn dark color="indigo" @click="discard" class="ml-5">Discard</v-btn>
+      <v-btn dark color="primary" @click="apply">Save and Upload during next Cycle</v-btn>
     </v-card>
   </v-form>
   </v-container>
@@ -139,7 +187,7 @@ export default {
     error: null,
     loaded: false,
     pinRules: [
-        value => (parseInt(value) >= 0 | value == '') || 'Must be an integer with at least five digits or empty',
+        value => (parseInt(value) >= 0 | value == '') || 'Must be an integer with at least four digits or empty',
       ],
     tab: null,
     whitebalance_modes: [
@@ -154,6 +202,11 @@ export default {
       { text: 'PAP', value: 1 },
       { text: 'CHAP', value: 2 }
     ],
+    timepicker_allowed_minutes: [0, 15, 30, 45],
+    first_photo_time: null,
+    last_photo_time: null,
+    first_photo_menu: false,
+    last_photo_menu: false,
     parameters: {
       "cam_quality": { activeValue: 0, modifiedValue: 0, defaultValue: 10 },
       "cam_auto_exposure": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
@@ -171,13 +224,19 @@ export default {
       "cell_remote_url": { activeValue: "", modifiedValue: "", defaultValue: "http://wwv-schwarzwald.de/webcam/api/upload" },
       "sys_secs_between_photos": { activeValue: 0, modifiedValue: 0, defaultValue: 3600 },
     },
-
   }),
   methods: {
+    whitebalance_mode_text_from_value(value) {
+      const found=this.whitebalance_modes.find(element => element.value == value)
+      return found.text
+    },
     hasChanged(parameter) {
       if (this.parameters[parameter]) {
         return this.parameters[parameter].activeValue != this.parameters[parameter].modifiedValue
       } else return false
+    },
+    revert(parameter) {
+      this.parameters[parameter].modifiedValue = this.parameters[parameter].activeValue;
     },
     apply() {
       // create array
@@ -189,7 +248,7 @@ export default {
       }
       console.log(JSON.stringify(newConfig))
       // post to backend
-      axios.post(process.env['VUE_APP_BACKENDURL']+'/set_config', JSON.stringify(newConfig), {
+      axios.post(process.env['VUE_APP_BACKENDURL']+'/set_config2', JSON.stringify(newConfig), {
         auth: {
             username: store.getters.currentUser,
             password: store.getters.currentPassword
@@ -199,11 +258,7 @@ export default {
       }, (error) => {
         console.log(error);
       });
-      this.$router.push('/photos')
     },
-    discard() {
-      this.$router.push('/photos')
-    }
   },
   mounted () {
     axios.get(process.env['VUE_APP_BACKENDURL']+'/get_config', {

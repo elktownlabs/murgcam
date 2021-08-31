@@ -3,6 +3,7 @@ import Router from "vue-router";
 import LoginForm from "../forms/LoginForm.vue"
 import PhotoForm from "../forms/PhotoForm.vue"
 import SettingsForm from "../forms/SettingsForm.vue"
+import FrequencyForm from "../forms/FrequencyForm.vue"
 import store from "../store";
 
 Vue.use(Router);
@@ -43,6 +44,12 @@ export default new Router({
       path: "/settings",
       name: "settings",
       component: SettingsForm,
+      beforeEnter: ifAuthenticated
+    },
+    {
+      path: "/frequency",
+      name: "frequency",
+      component: FrequencyForm,
       beforeEnter: ifAuthenticated
     },
     {

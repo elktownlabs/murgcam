@@ -4,7 +4,7 @@
       <v-layout align-center justify-center>
           <v-flex xs12 sm8 md4>
             <v-card class="elevation-12">
-                <v-toolbar dark color="indigo">
+                <v-toolbar dark color="primary">
                   <v-toolbar-title>Webcam Login</v-toolbar-title>
                 </v-toolbar>
                 <v-card-text>
@@ -36,7 +36,7 @@
           </v-flex>
       </v-layout>
     </v-container>
-    <v-layout align-center justify-center>  <span class="font-weight-thin caption" >v0.2</span></v-layout>
+    <v-layout align-center justify-center>  <span class="font-weight-thin caption" >v0.3</span></v-layout>
   </v-main>
 </template>
 
