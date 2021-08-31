@@ -180,13 +180,9 @@
       loadPhoto: function(id) {
         this.photoData = null
         if (store.getters.isAuthenticated) {
-          let queryStr = 'id='+id
-          axios.get(process.env['VUE_APP_BACKENDURL']+'/photo?'+queryStr+"&base64",
-            { auth: {
-                username: store.getters.currentUser,
-                password: store.getters.currentPassword
-          }}).then(response => {
-            this.photoData = "data:image/jpg;base64," + response.data.photo
+          axios.post(process.env['VUE_APP_BACKENDURL']+'/photo', { token: store.getters.currentToken, base64: true, id: id }
+        ).then(response => {
+            this.photoData = response.data.photo
             this.telemetry = response.data.telemetry
             this.cellProvider = response.data.cell_provider
             this.cellSite = response.data.cell_site

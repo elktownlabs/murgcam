@@ -10,16 +10,22 @@
       <v-menu transition="slide-y-transition" bottom>
         <template v-slot:activator="{ on, attrs }">
             <v-btn class="mx-1 hidden-sm-and-down" icon v-bind="attrs" v-on="on">
-              <v-avatar color="secondary lighten-2 white--text" size="36">TF</v-avatar>
+              <v-avatar color="secondary lighten-2 white--text" size="36">
+                <v-img v-if="$store.getters.currentUserAvatar != null" :src="$store.getters.currentUserAvatar" />
+                <div v-if="$store.getters.currentUserAvatar == null">{{ $store.getters.currentUserInitials }}</div>
+              </v-avatar>
             </v-btn>
         </template>
-        <v-card elevation="2" class="mx-auto">
+        <v-card elevation="2" outlined class="mx-auto" color="light-blue lighten-4">
           <v-list-item>
             <v-list-item-content>
-              <v-list-item-title class="text-h6 mb-1">Tobias Frodl</v-list-item-title>
-              <v-list-item-subtitle>toby</v-list-item-subtitle>
+              <v-list-item-title class="text-h6 mb-1">{{ this.$store.getters.currentUserFullName }}</v-list-item-title>
+              <v-list-item-subtitle>({{ this.$store.getters.currentUser }})</v-list-item-subtitle>
             </v-list-item-content>
-            <v-list-item-avatar size="60" color="grey"></v-list-item-avatar>
+            <v-list-item-avatar size="60" color="grey">
+              <v-img v-if="this.$store.getters.currentUserAvatar != null" :src="this.$store.getters.currentUserAvatar" />
+              <div v-if="this.$store.getters.currentUserAvatar == null">{{ this.$store.getters.currentUserInitials }}</div>
+            </v-list-item-avatar>
           </v-list-item>
           <v-card-actions>
             <v-btn outlined rounded @click="logout">
@@ -38,11 +44,12 @@
         <v-list>
           <v-list-item class="primary lighten-2">
             <v-list-item-avatar>
-              <img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John">
+              <v-img v-if="this.$store.getters.currentUserAvatar != null" :src="this.$store.getters.currentUserAvatar" />
+              <div v-if="this.$store.getters.currentUserAvatar == null">{{ this.$store.getters.currentUserInitials }}</div>
             </v-list-item-avatar>
             <v-list-item-content>
-              <v-list-item-title>toby</v-list-item-title>
-              <v-list-item-subtitle>Tobias Frodl</v-list-item-subtitle>
+              <v-list-item-title>{{ this.$store.getters.currentUserFullName }}</v-list-item-title>
+              <v-list-item-subtitle>({{ this.$store.getters.currentUser }})</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-divider></v-divider>

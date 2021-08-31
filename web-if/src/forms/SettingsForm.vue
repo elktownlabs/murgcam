@@ -27,6 +27,15 @@
             </v-row>
             <v-row>
               <v-col cols="12">
+                <v-header class="pl-0">Pixel Timing</v-header>
+                <div class="d-flex flex-row">
+                  <v-slider :color="hasChanged('cam_pixeltiming') ? 'red' : 'primary'" v-model="parameters['cam_pixeltiming'].modifiedValue" min="0" max="14"></v-slider>
+                  <v-chip @click:close="revert('cam_pixeltiming')" :text-color="hasChanged('cam_pixeltiming') ? 'white' : null" :color="hasChanged('cam_pixeltiming') ? 'red' : 'primary'" :close="hasChanged('cam_pixeltiming')" class="ml-2">{{ parameters['cam_pixeltiming'].modifiedValue }}</v-chip>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12">
                 <v-header class="pl-0">Auto Exposure</v-header>
                 <div class="d-flex flex-row">
                   <v-slider :color="hasChanged('cam_auto_exposure') ? 'red' : 'primary'" v-model="parameters['cam_auto_exposure'].modifiedValue" min="0" max="4"></v-slider>
@@ -208,7 +217,8 @@ export default {
     first_photo_menu: false,
     last_photo_menu: false,
     parameters: {
-      "cam_quality": { activeValue: 0, modifiedValue: 0, defaultValue: 10 },
+      "cam_quality": { activeValue: 10, modifiedValue: 10, defaultValue: 10 },
+      "cam_pixeltiming": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
       "cam_auto_exposure": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
       "cam_light_mode": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
       "cam_color_saturation": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
@@ -248,11 +258,8 @@ export default {
       }
       console.log(JSON.stringify(newConfig))
       // post to backend
-      axios.post(process.env['VUE_APP_BACKENDURL']+'/set_config2', JSON.stringify(newConfig), {
-        auth: {
-            username: store.getters.currentUser,
-            password: store.getters.currentPassword
-        }})
+      axios.post(process.env['VUE_APP_BACKENDURL']+'/set_config2', /*JSON.stringify(newConfig)*/ { token: store.getters.currentToken }
+      )
       .then((response) => {
         console.log(response);
       }, (error) => {
@@ -261,11 +268,8 @@ export default {
     },
   },
   mounted () {
-    axios.get(process.env['VUE_APP_BACKENDURL']+'/get_config', {
-      auth: {
-          username: store.getters.currentUser,
-          password: store.getters.currentPassword
-      }})
+    axios.post(process.env['VUE_APP_BACKENDURL']+'/get_config', { token: store.getters.currentToken }
+    )
     .then((response) => {
       for (var key in this.parameters) {
         if (response.data.active && response.data.active[key]) {
