@@ -9,10 +9,10 @@ import {
     const state = {
       current_user: localStorage.getItem("wwv-webcam.user") || "",
       current_user_fullname: localStorage.getItem("wwv-webcam.fullname") || "",
-      current_password: localStorage.getItem("wwv-webcam.pass") || "",
       current_user_avatar: localStorage.getItem("wwv-webcam.avatar") || null,
       current_user_initials: localStorage.getItem("wwv-webcam.initials") || "",
       current_token: localStorage.getItem("wwv-webcam.token") || "",
+      current_user_rights: JSON.parse(localStorage.getItem("wwv-webcam.rights")) || [],
       status: "",
       errorMessage: "",
       hasLoadedOnce: false
@@ -26,7 +26,7 @@ import {
       currentUserFullName: state => state.current_user_fullname,
       currentUserAvatar: state => state.current_user_avatar,
       currentUserInitials: state => state.current_user_initials,
-      currentPassword: state => state.current_password
+      hasRight: state => right => { return state.current_user_rights.includes(right) }
     };
 
     const actions = {
@@ -41,7 +41,8 @@ import {
                 localStorage.setItem("wwv-webcam.fullname", resp.data.name);
                 localStorage.setItem("wwv-webcam.initials", resp.data.initials);
                 localStorage.setItem("wwv-webcam.avatar", resp.data.avatar);
-                commit(AUTH_SUCCESS, user);
+                localStorage.setItem("wwv-webcam.rights", JSON.stringify(resp.data.rights));
+                commit(AUTH_SUCCESS, resp.data);
                 resolve(resp);
               } else {
                 commit(AUTH_ERROR, resp);
@@ -50,6 +51,7 @@ import {
                 localStorage.removeItem("wwv-webcam.fullname");
                 localStorage.removeItem("wwv-webcam.initials");
                 localStorage.removeItem("wwv-webcam.avatar");
+                localStorage.removeItem("wwv-webcam.rights");
                 reject(resp);
               }
             })
@@ -63,6 +65,7 @@ import {
           localStorage.removeItem("wwv-webcam.fullname");
           localStorage.removeItem("wwv-webcam.initials");
           localStorage.removeItem("wwv-webcam.avatar");
+          localStorage.removeItem("wwv-webcam.rights");
     resolve();
         });
       }
@@ -77,7 +80,11 @@ import {
         state.errorMessage = "";
         state.hasLoadedOnce = true;
         state.current_user = user.user
-        state.current_password = user.password
+        state.current_user_fullname = user.name
+        state.current_user_avatar = user.avatar
+        state.current_user_initials = user.initials
+        state.current_user_rights = user.rights
+        state.current_token = user.token
       },
       [AUTH_ERROR]: (state, resp) => {
         state.status = "error";
@@ -91,7 +98,11 @@ import {
       [AUTH_LOGOUT]: (state, msg) => {
         state.errorMessage = (msg) ? msg : ""
         state.current_user = ""
-        state.current_password = ""
+        state.current_user_fullname = ""
+        state.current_user_avatar = ""
+        state.current_user_initials = ""
+        state.current_user_rights = ""
+        state.current_token = ""
       }
     };
 

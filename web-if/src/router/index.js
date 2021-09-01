@@ -12,7 +12,7 @@ const ifNotAuthenticated = (to, from, next) => {
   if (!store.getters.isAuthenticated) {
     next();
   } else {
-    next("/login");
+    next(false);
   }
 };
 
@@ -24,6 +24,26 @@ const ifAuthenticated = (to, from, next) => {
   }
 };
 
+const hasFreqRight = (to, from, next) => {
+  if (!store.getters.isAuthenticated) {
+    next(false)
+  } else if (store.getters.hasRight("freq")) {
+    next()
+  } else {
+    next(false)
+  }
+}
+
+
+const hasSettingsRight = (to, from, next) => {
+  if (!store.getters.isAuthenticated) {
+    next(false)
+  } else if (store.getters.hasRight("set")) {
+    next();
+  } else {
+    next(false)
+  }
+}
 
 export default new Router({
   mode: "history",
@@ -44,13 +64,13 @@ export default new Router({
       path: "/settings",
       name: "settings",
       component: SettingsForm,
-      beforeEnter: ifAuthenticated
+      beforeEnter: hasSettingsRight
     },
     {
       path: "/frequency",
       name: "frequency",
       component: FrequencyForm,
-      beforeEnter: ifAuthenticated
+      beforeEnter: hasFreqRight
     },
     {
       path: "/login",
