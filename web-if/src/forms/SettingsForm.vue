@@ -9,6 +9,7 @@
           <v-tab value="picture">Picture</v-tab>
           <v-tab value="timing">Timing</v-tab>
           <v-tab value="cellconnection">Cell Connection</v-tab>
+          <v-tab value="powersupply">Power Supply</v-tab>
           <v-spacer/>
       </v-tabs>
     </v-toolbar>
@@ -96,8 +97,10 @@
           <v-container>
             <v-row>
               <v-col cols="6">
-                <v-text-field class="my-0 pb-0" :color="hasChanged('sys_secs_between_photos') ? 'red' : 'primary'" v-model="parameters['sys_secs_between_photos'].modifiedValue" label="Seconds between Uploads in Regular Mode" />
-                <div class="my-0 pt-0 subtitle-2 red--text">This value has changed. The camera is currently operating with the value 1799.</div>
+                <div class="d-flex flex-row">
+                  <v-text-field :color="hasChanged('sys_secs_between_photos') ? 'red' : 'primary'" v-model="parameters['sys_secs_between_photos'].modifiedValue" label="Seconds between Uploads in Regular Mode" />
+                  <v-btn @click="revert('sys_secs_between_photos')" v-if="hasChanged('sys_secs_between_photos')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
               </v-col>
             </v-row>
             <v-row>
@@ -119,8 +122,6 @@
               </v-col>
             </v-row>
           </v-container>
-
-
         </v-card>
       </v-tab-item>
       <v-tab-item key="cellconnection">
@@ -128,49 +129,65 @@
           <v-container>
             <v-row>
               <v-col>
-                <v-text-field :color="hasChanged('cell_remote_url') ? 'red' : 'primary'" v-model="parameters['cell_remote_url'].modifiedValue" label="Upload URL" />
+                <div class="d-flex flex-row">
+                  <v-text-field :color="hasChanged('cell_remote_url') ? 'red' : 'primary'" v-model="parameters['cell_remote_url'].modifiedValue" label="Upload URL" />
+                  <v-btn @click="revert('cell_remote_url')" v-if="hasChanged('cell_remote_url')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <div class="d-flex flex-row">
+                  <v-text-field :color="hasChanged('cell_pin') ? 'red' : 'primary'" v-model="parameters['cell_pin'].modifiedValue" :rules="pinRules" label="SIM PIN" />
+                  <v-btn @click="revert('cell_pin')" v-if="hasChanged('cell_pin')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <div class="d-flex flex-row">
+                  <v-text-field :color="hasChanged('cell_apn') ? 'red' : 'primary'" v-model="parameters['cell_apn'].modifiedValue" label="APN" />
+                  <v-btn @click="revert('cell_apn')" v-if="hasChanged('cell_apn')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <div class="d-flex flex-row">
+                  <v-text-field :color="hasChanged('cell_apn_user') ? 'red' : 'primary'" v-model="parameters['cell_apn_user'].modifiedValue" label="APN User" />
+                  <v-btn @click="revert('cell_apn_user')" v-if="hasChanged('cell_apn_user')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <div class="d-flex flex-row">
+                  <v-text-field :color="hasChanged('cell_apn_pass') ? 'red' : 'primary'" v-model="parameters['cell_apn_pass'].modifiedValue" label="APN Password" />
+                  <v-btn @click="revert('cell_apn_pass')" v-if="hasChanged('cell_apn_pass')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <div class="d-flex flex-row">
+                  <v-select :color="hasChanged('cell_apn_auth') ? 'red' : 'primary'" v-model="parameters['cell_apn_auth'].modifiedValue" :items="apnauth_modes"  label="APN Auth Type" />
+                  <v-btn @click="revert('cell_apn_auth')" v-if="hasChanged('cell_apn_auth')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
               </v-col>
             </v-row>
           </v-container>
+        </v-card>
+      </v-tab-item>
+
+      <v-tab-item key="powersupply">
+        <v-card class="pt-6" color="grey lighten-3" flat>
           <v-container>
             <v-row>
-              <v-col>
-                <v-text-field :color="hasChanged('cell_pin') ? 'red' : 'primary'" v-model="parameters['cell_pin'].modifiedValue" :rules="pinRules" label="SIM PIN" />
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container>
-            <v-row>
-              <v-col>
-                <v-text-field :color="hasChanged('cell_apn') ? 'red' : 'primary'" v-model="parameters['cell_apn'].modifiedValue" label="APN" />
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container>
-            <v-row>
-              <v-col>
-                <v-text-field :color="hasChanged('cell_apn_user') ? 'red' : 'primary'" v-model="parameters['cell_apn_user'].modifiedValue" label="APN User" />
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container>
-            <v-row>
-              <v-col>
-                <v-text-field :color="hasChanged('cell_apn_pass') ? 'red' : 'primary'" v-model="parameters['cell_apn_pass'].modifiedValue" label="APN Password" />
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container>
-            <v-row>
-              <v-col>
-                <v-select :color="hasChanged('cell_apn_auth') ? 'red' : 'primary'" v-model="parameters['cell_apn_auth'].modifiedValue" :items="apnauth_modes"  label="APN Auth Type" />
-              </v-col>
-            </v-row>
-          </v-container>
-          <v-container>
-            <v-row>
-              <v-col>
-                <v-text-field :color="hasChanged('sys_secs_between_photos') ? 'red' : 'primary'" v-model="parameters['sys_secs_between_photos'].modifiedValue" label="Seconds between Uploads" />
+              <v-col cols="6">
+                <div class="d-flex flex-row">
+                  <v-text-field :color="hasChanged('sys_minimum_voltage') ? 'red' : 'primary'" v-model="parameters['sys_minimum_voltage'].modifiedValue" label="Minimum Battery Voltage (mV)" />
+                  <v-btn @click="revert('sys_minimum_voltage')" v-if="hasChanged('sys_minimum_voltage')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
+                </div>
               </v-col>
             </v-row>
           </v-container>
@@ -233,6 +250,7 @@ export default {
       "cell_apn_auth": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
       "cell_remote_url": { activeValue: "", modifiedValue: "", defaultValue: "http://wwv-schwarzwald.de/webcam/api/upload" },
       "sys_secs_between_photos": { activeValue: 0, modifiedValue: 0, defaultValue: 3600 },
+      "sys_minimum_voltage": { activeValue: 0, modifiedValue: 0, defaultValue: 10400 }
     },
   }),
   methods: {
