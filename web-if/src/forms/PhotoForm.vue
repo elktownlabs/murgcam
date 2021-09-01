@@ -88,7 +88,6 @@ export default {
     this.updateInterval = setInterval(function() { this.loadDay(new Date(this.day)) }.bind(this), 30000)
   },
   destroyed() {
-    console.log(this.updateInterval)
     clearInterval(this.updateInterval)
   },
   mounted () {

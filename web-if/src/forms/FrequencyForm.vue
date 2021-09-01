@@ -1,25 +1,30 @@
 <template>
   <v-container>
     <h2 class="py-4">Photo Frequency</h2>
-    <v-alert v-if="error != null" border="top" color="red lighten-2" dark>{{ error }}</v-alert>
+    <v-alert v-model="alert_error" border="top" color="red lighten-2" dark>{{ alert_error_text }}</v-alert>
+    <v-alert v-model="alert_success" border="top" color="green lighten-2" show dismissible dark>{{ alert_success_text }}</v-alert>
     <v-form v-if="loaded" ref="form">
         <v-card class="pt-6" color="grey lighten-3" flat>
           <v-container>
             <v-row>
               <v-col cols="12">
                 <h3 ref="radio" class="text-h5">Current State</h3>
-                <div class="my-4">The camera is operating in regular mode. A photo is take every X minutes.<br/>Fast Mode was activated at 1:30pm, 12/11/2021</div>
-                <v-btn class="mr-4 my-4 primary">Go back to regular mode</v-btn>
+                <div class="my-4">
+                  The camera is operating in <b>{{ modeName(current_settings.mode) }} mode</b>{{ ((current_settings.end != null) && (requested_settings != null))? " until " + current_settings.end : "" }}.<br/>
+                  <span v-if="requested_settings != null">Switch to <b>{{ modeName(requested_settings.mode) }} mode</b>{{ requested_settings.mode_end != null ? " until " + new Date(requested_settings.mode_end).toLocaleString() : "" }} is scheduled.<br/>Waiting for camera contact.</span></div>
+                <v-btn v-if="canCancelRequest()" @click="apply_regular_mode()" class="mr-4 my-4 primary">Go back to regular mode / cancel mode change</v-btn>
               </v-col>
               <v-col cols="12">
                 <h3 ref="radio" class="text-h5">Temporarily Increase Frequency</h3>
                 <div class="mb-3 subtitle-2 red--text">Warning: The camera is battery powered! More photos mean shorter battery life. Use this function conservatively.</div>
-                <v-radio-group row>
-                    <v-radio label="Take a photo every 30 minutes (fast mode)" value="radio-2"/>
-                    <v-radio label="Take a photo every 10 minutes (express mode)" value="radio-1"/>
+                <v-radio-group row v-model="mode">
+                    <v-radio label="Take a photo every 30 minutes (fast mode)" value="fast" />
+                    <v-radio label="Take a photo every 10 minutes (express mode)" value="express" />
                 </v-radio-group>
-                <v-select :items="duration_fast" label="For how long"></v-select>
-                <v-btn class="mr-4 my-4 primary">Increase frequency</v-btn>
+                <v-select v-if="mode=='fast'" item-value="value" item-text="key" v-model="duration" :items="duration_fast_options" label="For how long"></v-select>
+                <v-select v-if="mode=='express'" item-value="value" item-text="key" v-model="duration" :items="duration_express_options" label="For how long"></v-select>
+                <v-btn @click="apply()"  :disabled="!applicable()" class="mr-4 my-4 primary">Increase frequency</v-btn>
+                <v-btn @click="mode=null" class="mr-4 my-4 primary">Discard</v-btn>
               </v-col>
             </v-row>
           </v-container>
@@ -37,99 +42,103 @@ export default {
   components: {
   },
   data: () => ({
-    duration_fast: ['3 hours', '6 hours', 'until the end of the day'],
-    duration_express: ['1 hour', '2 hours', '3 hours'],
-    error: null,
+    alert_success: false,
+    alert_success_text: null,
+    alert_error: false,
+    alert_error_text: null,
+    current_settings: null,
+    requested_settings: null,
+    duration_fast_options: [ { key: '3 hours', value: 1 }, { key: '6 hours', value: 2 },  { key: 'until the end of the day', value: 3 }],
+    duration_express_options: [ { key: '1 hour', value: 4 }, {key: '2 hours', value: 5 }, { key: '3 hours', value: 6 }],
     loaded: false,
-    pinRules: [
-        value => (parseInt(value) >= 0 | value == '') || 'Must be an integer with at least five digits or empty',
-      ],
+    duration: null,
+    mode: null,
     tab: null,
-    whitebalance_modes: [
-      { text: 'Auto', value: 0 },
-      { text: 'Sunny', value: 1 },
-      { text: 'Cloudy', value: 2 },
-      { text: 'Office', value: 3 },
-      { text: 'Home', value: 4 }
-    ],
-    apnauth_modes: [
-      { text: 'None', value: 0 },
-      { text: 'PAP', value: 1 },
-      { text: 'CHAP', value: 2 }
-    ],
-    parameters: {
-      "cam_quality": { activeValue: 0, modifiedValue: 0, defaultValue: 10 },
-      "cam_auto_exposure": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
-      "cam_light_mode": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
-      "cam_color_saturation": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
-      "cam_brightness": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
-      "cam_contrast": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
-      "cam_hue": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
-      "cam_sharpness": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
-      "cell_pin": { activeValue: "", modifiedValue: "", defaultValue: "1000" },
-      "cell_apn": { activeValue: "", modifiedValue: "", defaultValue: "internet" },
-      "cell_apn_user": { activeValue: "", modifiedValue: "", defaultValue: "" },
-      "cell_apn_pass": { activeValue: "", modifiedValue: "", defaultValue: "" },
-      "cell_apn_auth": { activeValue: 0, modifiedValue: 0, defaultValue: 0 },
-      "cell_remote_url": { activeValue: "", modifiedValue: "", defaultValue: "http://wwv-schwarzwald.de/webcam/api/upload" },
-      "sys_secs_between_photos": { activeValue: 0, modifiedValue: 0, defaultValue: 3600 },
-    },
-
   }),
   methods: {
+    modeName(str) {
+      switch (str) {
+        case 0: return "regular"
+        case 1: return "fast"
+        case 2: return "express"
+      }
+    },
     hasChanged(parameter) {
       if (this.parameters[parameter]) {
         return this.parameters[parameter].activeValue != this.parameters[parameter].modifiedValue
       } else return false
     },
-    apply() {
-      // create array
-      var newConfig = {}
-      for (var key in this.parameters) {
-        if (this.hasChanged(key)) {
-          newConfig[key] = this.parameters[key].modifiedValue
-        }
-      }
-      console.log(JSON.stringify(newConfig))
-      // post to backend
-      axios.post(process.env['VUE_APP_BACKENDURL']+'/set_config', JSON.stringify(newConfig), {
-        auth: {
-            username: store.getters.currentUser,
-            password: store.getters.currentPassword
-        }})
-      .then((response) => {
-        console.log(response);
-      }, (error) => {
-        console.log(error);
-      });
-      this.$router.push('/photos')
+    canCancelRequest() {
+      // a mode other than regular is requested
+      if (this.requested_settings && this.requested_settings.mode > 0) return true
+      // we want to go to regular mode and cam is in fast or express mode
+      if (this.requested_settings && this.requested_settings.mode == 0 & this.current_settings.mode > 0) return true
+      return false
     },
-    discard() {
-      this.$router.push('/photos')
-    }
+    applicable() {
+      if (this.mode == "fast") return ((this.duration >= 1) && (this.duration <= 3))
+      if (this.mode == "express") return ((this.duration >= 4) && (this.duration <= 6))
+      return false
+    },
+    apply() {
+      if (!this.applicable()) return
+
+      // post to backend
+      axios.post(process.env['VUE_APP_BACKENDURL']+'/set_frequency', {
+          token: store.getters.currentToken,
+          mode_identifier: this.duration
+      })
+      .then((response) => {
+        this.current_settings = response.data.current
+        this.requested_settings = response.data.requested
+        this.loaded = true
+        this.alert_success_text = "Change successfully scheduled"
+        this.alert_success = true
+        this.alert_error = false
+      }, (error) => {
+        this.loaded = false
+        this.alert_error_text = error.message
+        this.alert_error = true
+        this.alert_success = false
+      });
+
+    },
+    apply_regular_mode() {
+      // post to backend
+      axios.post(process.env['VUE_APP_BACKENDURL']+'/set_frequency', {
+          token: store.getters.currentToken,
+          mode_identifier: 0
+      })
+      .then((response) => {
+        this.current_settings = response.data.current
+        this.requested_settings = response.data.requested
+        this.loaded = true
+        this.alert_success_text = "Change successfully scheduled"
+        this.alert_success = true
+        this.alert_error = false
+      }, (error) => {
+        this.loaded = false
+        this.alert_error_text = error.message
+        this.alert_error = true
+        this.alert_success = false
+      });
+    },
   },
   mounted () {
-    axios.get(process.env['VUE_APP_BACKENDURL']+'/get_config', {
-      auth: {
-          username: store.getters.currentUser,
-          password: store.getters.currentPassword
-      }})
+    axios.post(process.env['VUE_APP_BACKENDURL']+'/get_frequency', {
+      token: store.getters.currentToken,
+    })
     .then((response) => {
-      for (var key in this.parameters) {
-        if (response.data.active && response.data.active[key]) {
-          this.parameters[key].activeValue = response.data.active[key]
-        } else {
-          this.parameters[key].activeValue = this.parameters[key].defaultValue
-        }
-        if (response.data.modified && response.data.modified[key]) {
-          this.parameters[key].modifiedValue = response.data.modified[key]
-        } else {
-          this.parameters[key].modifiedValue = this.parameters[key].activeValue
-        }
-      }
-      this.loaded = true
-    }, (error) => {
-      this.error = "Unable to load data: " + error.message
+        this.current_settings = response.data.current
+        this.requested_settings = response.data.requested
+        this.loaded = true
+        this.alert_success = false
+        this.alert_error = false
+      }, (error) => {
+        this.loaded = false
+        this.alert_error_text = error.message
+        this.alert_error = true
+        this.alert_success = false
     });
 }
 };
