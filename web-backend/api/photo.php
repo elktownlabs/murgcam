@@ -1,13 +1,6 @@
 <?php
-/* Copyright (C) Elktown Labs. - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
- * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
- */
 
-require_once("config.php");
-require_once("helpers.php");
-
+require("config.php");
 
 if (CORS) {
         header('Access-Control-Allow-Origin: *');
@@ -22,19 +15,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
            return 0;
 }
 
-// authentication
-if (!authenticate_user()) {
-    header('WWW-Authenticate: Basic realm="WebCam API"');
-    header('HTTP/1.1 401 Unauthorized');
-    exit;
+// check that database exists
+if (!is_file(APPDATABASE)) {
+	header("HTTP/1.1 500 Internal Server Error");
+	return;
+}
+$appdb = new SQLite3(APPDATABASE);
+if (is_null($appdb)) {
+	header("HTTP/1.1 500 Internal Server Error");
+	return;
 }
 
-$do_base64 = false;
-if (array_key_exists("base64", $_GET)) {
-	$do_base64 = true;
+
+// extract supplied user and password from json post
+$data = json_decode(file_get_contents('php://input'), true);
+// authentication
+if (!array_key_exists("token", $data)) {
+    header('HTTP/1.0 401 Unauthorized');
+	return;
 }
- 
+$query = $appdb->prepare("SELECT expiration FROM active_logins WHERE token=? LIMIT 1");
+$query->bindParam(1, $data["token"], SQLITE3_TEXT);
+$resultset = $query->execute();
+$authenticated = false;
+while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
+	if ($row["expiration"] >= time()) $authenticated = true;
+}
+$resultset->finalize();
+$appdb->close();
+if (!$authenticated) {
+	header('HTTP/1.0 401 Unauthorized');
+	return;
+}
+
+
+// do we want to encode in base64
+$do_base64 = false;
+if (array_key_exists("base64", $data)) {
+	$do_base64 = $data["base64"];
+}
+
 if ($do_base64) {
+	// base64 encoding also includes meta-data.
+
 	// check that database exists
 	if (!is_file(DATABASE)) {
         	header("HTTP/1.1 500 Internal Server Error");
@@ -60,15 +83,24 @@ if ($do_base64) {
 }
 
 
-if (!array_key_exists("id", $_GET)) {
+if (!array_key_exists("id", $data)) {
     header('HTTP/1.0 404 Not Found');
     exit;
 }
 
-$id = trim($_GET["id"]);
+$id = trim($data["id"]);
 $filename = "cam_" . $id . ".jpg";
 
 $photo = file_get_contents(PHOTODIR."/".$filename);
+
+// temporary image flipping
+$stream = fopen("php://memory", "w+");
+$gdphoto = imagecreatefromjpeg(PHOTODIR."/".$filename);
+imageflip($gdphoto, IMG_FLIP_VERTICAL);
+imagejpeg($gdphoto, $stream);
+rewind($stream);
+$flipped_photo = stream_get_contents($stream);
+
 
 if ($photo === false) {
     header('HTTP/1.0 404 Not Found');
@@ -77,7 +109,7 @@ if ($photo === false) {
 
 if ($do_base64) {
 	$data = [];
-	
+
 	// fetch telemetry data
 	$query = $db->prepare("SELECT * FROM photos WHERE filename = ?");
 	$query->bindParam(1, $filename, SQLITE3_TEXT);
@@ -88,9 +120,9 @@ if ($do_base64) {
 		if (array_key_exists("firmare", $data["telemetry"])) {
 			$data["telemetry"]["firmware"] = $data["telemetry"]["firmare"];
 			unset($data["telemetry"]["firmare"]);
-		}			
+		}
 	}
-	
+
 	// fetch cell network data
 	$query = $celldb->prepare("SELECT countryName,operator,brand FROM cell_networks WHERE mcc=? AND mnc=? LIMIT 1");
 	$mnc = intval(trim($data["telemetry"]["gsm_mnc"]));
@@ -108,11 +140,8 @@ if ($do_base64) {
 		$data["cell_provider"] = $provider;
 	}
 
-	// fetch cell location data	
+	// fetch cell location data
 	$query = $celldb->prepare("SELECT latitude,longitude,description FROM cell_locations WHERE mcc=? AND mnc=? AND ci=? LIMIT 1");
-	$mnc = intval(trim($_GET["mnc"]));
-	$mcc = intval(trim($_GET["mcc"]));
-	$cid = intval(trim($_GET["cid"]));
 	$query->bindParam(1, $data["telemetry"]["gsm_mcc"], SQLITE3_INTEGER);
 	$query->bindParam(2, $data["telemetry"]["gsm_mnc"], SQLITE3_INTEGER);
 	$query->bindParam(3, $data["telemetry"]["gsm_cellid"], SQLITE3_INTEGER);
@@ -128,12 +157,12 @@ if ($do_base64) {
 	}
 
 	// add photo
-	$data["photo"] = base64_encode($photo);
+	$data["photo"] = "data:image/jpg;base64," . base64_encode($flipped_photo);
 	header('Content-Type: application/json');
 	echo json_encode($data);
 } else {
 	header("Content-Type: image/jpeg");
-	echo $photo;
+	echo $flipped_photo;
 }
 
 ?>

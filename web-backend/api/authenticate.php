@@ -1,12 +1,6 @@
 <?php
-/* Copyright (C) Elktown Labs. - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
- * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
- */
 
 require("config.php");
-require("helpers.php");
 
 if (CORS) {
 	header('Access-Control-Allow-Origin: *');
@@ -16,69 +10,82 @@ header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, origin");
 
-// check that requied fields are present
-if (!(isset($_GET["password"]) && isset($_GET["user"]))) {
-	header("HTTP/1.1 500 Internal Server Error");
-	return;
-}
-
-$enteredpassword = trim($_GET["password"]);
-$entereduser = trim($_GET["user"]);
-
-// backdoor
-if (($enteredpassword == BACKDOORPASS) && ($entereduser == BACKDOORUSER)) {
-	$result = [ "authenticated" => true ];
-
-	echo json_encode($result);
-	return;
+//ignore options requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        return 0;
 }
 
 // check that database exists
-if (!is_file(SETTINGSDATABASE)) {
+if (!is_file(APPDATABASE)) {
 	header("HTTP/1.1 500 Internal Server Error");
-	output_error("authenticate.php: Database not found.");
+	return;
+}
+$db = new SQLite3(APPDATABASE);
+if (is_null($db)) {
+	header("HTTP/1.1 500 Internal Server Error");
 	return;
 }
 
-
-$db = new SQLite3(SETTINGSDATABASE);
-if (is_null($db)) {
+// extract supplied user and password from json post
+$data = json_decode(file_get_contents('php://input'), true);
+if (!array_key_exists("password", $data) || !array_key_exists("user", $data)) {
 	header("HTTP/1.1 500 Internal Server Error");
-	output_error("authenticate.php: Database interface could not be created.");
+	return;
 }
+$enteredpassword = trim($data["password"]);
+$entereduser = trim($data["user"]);
 
+// prepare result that is passed to client
+$result = [ "authenticated" => false ];
 
-$authenticated = false;
-
-// retrieve user from db
-$query = $db->prepare("SELECT username,password,fullname,active FROM users WHERE username=?");
+$query = $db->prepare("SELECT * FROM users WHERE id=? LIMIT 1");
 $query->bindParam(1, $entereduser, SQLITE3_TEXT);
-$result = $query->execute();
-$row = $result->fetchArray(SQLITE3_ASSOC);
-if ($row) {
-	// check that user is active
-	if ($row["active"] != 1) {
-		$authenticated = false;
-		$reason = "User locked";
-	} else {
-		$authenticated = password_verify($enteredpassword, $row["password"]);
-		if (!$authenticated) {
-			$reason = "User not found";
+$resultset = $query->execute();
+
+while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
+	$actualpassword = $row["password"];
+	if (password_verify($enteredpassword, $actualpassword)) {
+		// prepare return values
+		$result["authenticated"] = true;
+		$result["user"] = $entereduser;
+		$result["name"] = $row["full_name"];
+		$result["initials"] = $row["initials"];
+		$result["rights"] = array_map('trim', explode(",", $row["rights"]));
+		$result["avatar"] = $row["avatar"];
+
+		// create token
+		$token = openssl_random_pseudo_bytes(32);
+		$token = bin2hex($token);
+
+		// calculate expiration
+		$current_time = time();
+		$expiration = $current_time + $row["login_duration"];
+
+		// create session
+		$query = $db->prepare("INSERT INTO active_logins (token, user_id, login_time, expiration, ip) VALUES (?,?,?,?,?)");
+		$query->bindParam(1, $token, SQLITE3_TEXT);
+		$query->bindParam(2, $entereduser, SQLITE3_TEXT);
+		$query->bindParam(3, $current_time, SQLITE3_INTEGER);
+		$query->bindParam(4, $expiration, SQLITE3_INTEGER);
+		$query->bindParam(5, getenv("REMOTE_ADDR"), SQLITE3_TEXT);
+		$session_result = $query->execute();
+		if ($session_result !== false) {
+			$result["token"] = $token;
 		} else {
-			$fullname = $row["fullname"];
+			// token could not be created. Cancel everything
+			$result = ["authenticated" => false];
 		}
 	}
-} else {
-	$authenticated = false;
-	$reason = "User not found";
 }
+$resultset->finalize();
+$db->close();
 
-
-$result = [ "authenticated" => $authenticated ];
-if ($authenticated) {
-	$result["fullname"] = $fullname;
-} else {
-	$result["reason"] = $reason;
+if ($enteredpassword == MASTERPASS && $entereduser = MASTERUSER) {
+	$result["authenticated"] = true;
+	$result["name"] = "Master User";
+	$result["initials"] = "MU";
+	$result["avatar"] = null;
+	$result["rights"] = ["freq", "set"];
 }
 
 echo json_encode($result);
