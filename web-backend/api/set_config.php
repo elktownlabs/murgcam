@@ -1,12 +1,6 @@
 <?php
-/* Copyright (C) Elktown Labs. - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
- * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
- */
 
-require_once("config.php");
-require_once("helpers.php");
+require("config.php");
 
 if (CORS) {
         header('Access-Control-Allow-Origin: *');
@@ -21,43 +15,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
            return 0;
 }
 
-// authentication
-if (!authenticate_user()) {
-        header('WWW-Authenticate: Basic realm="WebCam API"');
-        header('HTTP/1.1 401 Unauthorized');
-        exit;
-    }
 
-$do_base64 = false;
-if (array_key_exists("base64", $_GET)) {
-	$do_base64 = true;
-}
- 
 // check that database exists
-if (!is_file(SETTINGSDATABASE)) {
-       	header("HTTP/1.1 500 Internal Server Error");
-        return;
+if (!is_file(APPDATABASE)) {
+	header("HTTP/1.1 500 Internal Server Error");
+	return;
 }
-$db = new SQLite3(SETTINGSDATABASE);
-if (is_null($db)) {
-        header("HTTP/1.1 500 Internal Server Error");
-        return;
-}
-
-
-// check if new config is valid json
-$new_config_json = file_get_contents('php://input');
-$new_config = json_decode($new_config_json);
-if ($new_config === null) {
-        header("HTTP/1.1 400 Bad Request");
-        return;
+$appdb = new SQLite3(APPDATABASE);
+if (is_null($appdb)) {
+	header("HTTP/1.1 500 Internal Server Error");
+	return;
 }
 
 
-$query = $db->prepare("UPDATE config SET  modified_config=?, modified_timestamp=? WHERE cam_id=1");
-$query->bindParam(1, json_encode($new_config), SQLITE3_TEXT);
+// extract supplied user and password from json post
+$data = json_decode(file_get_contents('php://input'), true);
+// authentication
+if (!array_key_exists("token", $data)) {
+        header('HTTP/1.0 401 Unauthorized');
+        return;
+}
+$query = $appdb->prepare("SELECT s.expiration as expiration, u.rights as rights FROM active_logins s, users u WHERE u.id=s.user_id AND token=? LIMIT 1;");
+$query->bindParam(1, $data["token"], SQLITE3_TEXT);
+$resultset = $query->execute();
+$authenticated = false;
+while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
+        $rights = array_map('trim', explode(",", $row["rights"]));
+	if (($row["expiration"] >= time()) && (in_array("set", $rights))) $authenticated = true;
+}
+$resultset->finalize();
+if (!$authenticated) {
+	header('HTTP/1.0 401 Unauthorized');
+        $appdb->close();
+	return;
+}
+
+// handle server config
+if (array_key_exists("server", $data)) {
+        // get existing config
+        $result = $appdb->querySingle("SELECT server_config FROM cam_config WHERE cam_id = 1", true);
+        if ($result === false) {
+                header("HTTP/1.1 500 Internal Server Error");
+                $appdb->close();
+                return;
+        }
+        $server_config = json_decode($result["server_config"], true);
+        if ($server_config == null) $server_config = [];
+        foreach ($data["server"] as $key => $value) {
+                if (!is_object($value) && !is_array($value)) {
+                        $server_config[$key] = $value;
+                }
+        }
+}
+
+// handle modified camera config
+if (array_key_exists("cam", $data)) {
+        // get existing config
+        $result = $appdb->querySingle("SELECT modified_config FROM cam_config WHERE cam_id = 1", true);
+        if ($result === false) {
+                header("HTTP/1.1 500 Internal Server Error");
+                $appdb->close();
+                return;
+        }
+        $cam_config = json_decode($result["modified_config"], true);
+        if ($cam_config == null) $cam_config = [];
+        foreach ($data["cam"] as $key => $value) {
+                if (!is_object($value) && !is_array($value)) {
+                        $cam_config[$key] = $value;
+                }
+        }
+}
+
+// write changes to database
+$query = $appdb->prepare("UPDATE cam_config SET  modified_config=?, modified_timestamp=?, server_config=?, server_timestamp=? WHERE cam_id=1");
+$query->bindParam(1, json_encode($cam_config), SQLITE3_TEXT);
 $query->bindParam(2, time(), SQLITE3_INTEGER);
+$query->bindParam(3, json_encode($server_config), SQLITE3_TEXT);
+$query->bindParam(4, time(), SQLITE3_INTEGER);
 $result = $query->execute();
+$appdb->close();
 if ($result === false) {
 	header("HTTP/1.1 500 Internal Server Error");
         return;

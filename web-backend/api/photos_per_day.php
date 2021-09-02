@@ -1,12 +1,6 @@
 <?php
-/* Copyright (C) Elktown Labs. - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
- * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
- */
 
-require_once("config.php");
-require_once("helpers.php");
+require("config.php");
 
 if (CORS) {
 	header('Access-Control-Allow-Origin: *');
@@ -16,20 +10,46 @@ header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, origin");
 
-// ignore post requests
+// ignore options requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 	   return 0;
 }
 
+// check that database exists
+if (!is_file(APPDATABASE)) {
+	header("HTTP/1.1 500 Internal Server Error");
+	return;
+}
+$appdb = new SQLite3(APPDATABASE);
+if (is_null($appdb)) {
+	header("HTTP/1.1 500 Internal Server Error");
+	return;
+}
+
+
+// extract supplied user and password from json post
+$data = json_decode(file_get_contents('php://input'), true);
 // authentication
-if (!authenticate_user()) {
-    header('WWW-Authenticate: Basic realm="WebCam API"');
-    header('HTTP/1.1 401 Unauthorized');
-    exit;
+if (!array_key_exists("token", $data)) {
+    header('HTTP/1.0 401 Unauthorized');
+	return;
+}
+$query = $appdb->prepare("SELECT expiration FROM active_logins WHERE token=? LIMIT 1");
+$query->bindParam(1, $data["token"], SQLITE3_TEXT);
+$resultset = $query->execute();
+$authenticated = false;
+while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
+	if ($row["expiration"] >= time()) $authenticated = true;
+}
+$resultset->finalize();
+$appdb->close();
+if (!$authenticated) {
+	header('HTTP/1.0 401 Unauthorized');
+	return;
 }
 
 // check that arguments are correct
-if (!array_key_exists("date",  $_GET)) {
+if (!array_key_exists("date",  $data)) {
 	header("HTTP/1.1 404 Not Found");
 	return;
 }
@@ -48,15 +68,17 @@ if (is_null($db)) {
 
 // calculate timestamps
 $diff1Day = new DateInterval('P1D');
-$startDate = new DateTime($_GET["date"]);
+$startDate = new DateTime($data["date"]);
 $startDate->setTime(0, 0, 0, 0);
 $endDate = clone $startDate;
 $endDate->add($diff1Day);
 
 // find num of photos for each day
 $query = $db->prepare("SELECT * FROM photos WHERE Timestamp>=? AND Timestamp<? ORDER BY Timestamp ASC");
-$query->bindParam(1, $startDate->getTimestamp(), SQLITE3_INTEGER);
-$query->bindParam(2, $endDate->getTimestamp(), SQLITE3_INTEGER);
+$startTimestamp = $startDate->getTimestamp();
+$endTimestamp = $endDate->getTimestamp();
+$query->bindParam(1, $startTimestamp, SQLITE3_INTEGER);
+$query->bindParam(2, $endTimestamp, SQLITE3_INTEGER);
 $result = $query->execute();
 $queryresult = [];
 while($row = $result->fetchArray(SQLITE3_ASSOC)) {

@@ -1,15 +1,10 @@
 <?php
-/* Copyright (C) Elktown Labs. - All Rights Reserved
- * Unauthorized copying of this file, via any medium is strictly prohibited
- * Proprietary and confidential
- * Written by Tobias Frodl <toby@elktown-labs.com>, 2021
- */
-
-require("config.php");
-require("helpers.php");
 
 date_default_timezone_set("UTC");
 setlocale(LC_ALL, '');
+
+define('DATABASE', '/var/www/webcam/photos/photos.db');
+define('PHOTODIR', '/var/www/webcam/photos/');
 
 function __autoload($class)
 {
@@ -30,18 +25,6 @@ use lsolesen\pel\PelJpeg;
 use lsolesen\pel\PelTag;
 use lsolesen\pel\PelTiff;
 
-// function for writing outlined text
-function imagettfstroketext(&$image, $size, $angle, $x, $y, &$textcolor, &$strokecolor, $fontfile, $text, $px) {
-    for($c1 = ($x-$px); $c1 <= ($x+$px); $c1++) {
-        $c2 = $y + round(sqrt($px*$px - ($x-$c1)*($x-$c1)));
-        imagettftext($image, $size, $angle, $c1, $c2, $strokecolor, $fontfile, $text);
-        $c3 = $y - round(sqrt($px*$px - ($x-$c1)*($x-$c1)));
-        imagettftext($image, $size, $angle, $c1, $c3, $strokecolor, $fontfile, $text);
-    }
-   return imagettftext($image, $size, $angle, $x, $y, $textcolor, $fontfile, $text);
-}
-
-
 $photo_uniqueid = uniqid('cam_');
 $target_filename =  $photo_uniqueid . ".jpg";
 $upload_timestamp = new DateTime('now');
@@ -53,39 +36,28 @@ if (!is_dir(PHOTODIR)) {
 	return;
 }
 
-// check that databases exists
+// check that database exists
 if (!is_file(DATABASE)) {
 	header("HTTP/1.1 500 Internal Server Error");
 }
-if (!is_file(SETTINGSDATABASE)) {
-	header("HTTP/1.1 500 Internal Server Error");
-}
-
-
-$photodb = new SQLite3(DATABASE);
-if (is_null($photodb)) {
-	header("HTTP/1.1 500 Internal Server Error");
-}
-$settingsdb = new SQLite3(SETTINGSDATABASE);
-if (is_null($photodb)) {
+$db = new SQLite3(DATABASE);
+if (is_null($db)) {
 	header("HTTP/1.1 500 Internal Server Error");
 }
 
 // check that photo is actually there
 if (!array_key_exists("photo",  $_FILES)) {
-	$results = $photodb->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 1);");
+	$results = $db->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 1);");
 	header("HTTP/1.1 400 Bad Request");
-	$photodb->close();
-	$settingsdb->close();
+	$db->close();
 	return;
 }
 
 // check for upload errors
 if ($_FILES["photo"]["error"] != UPLOAD_ERR_OK) {
-	$results = $photodb->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 2);");
+	$results = $db->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 2);");
 	header("HTTP/1.1 400 Bad Request");
-	$photodb->close();
-	$settingsdb->close();
+	$db->close();
 	return;
 }
 
@@ -95,13 +67,11 @@ $photo_basename = basename($_FILES["photo"]["name"]);
 $photo_finalname = PHOTODIR . "/" . $target_filename;
 $res = move_uploaded_file($photo_tmpname, $photo_finalname);
 if (!$res) {
-	$results = $photodb->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 3);");
+	$results = $db->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 3);");
 	header("HTTP/1.1 500 Internal Server Error");
-	$photodb->close();
-	$settingsdb->close();
+	$db->close();
 	return;
 }
-$photodb->close();
 
 
 // add exif information
@@ -155,14 +125,13 @@ if ($metadata != null) {
 		if (array_key_exists("settings", $metadata_decoded)) {
 			$settings = $metadata_decoded["settings"];
 			$settings_encoded = json_encode($settings);
-			$query = $settingsdb->prepare("UPDATE config SET active_config=?, active_timestamp=? WHERE cam_id=1");
+			$query = $db->prepare("UPDATE config SET active_config=?, active_timestamp=? WHERE cam_id=1");
 			$query->bindParam(1, $settings_encoded, SQLITE3_TEXT);
 			$query->bindParam(2, $db_timestamp, SQLITE3_TEXT);
 			$result = $query->execute();
 		}
 	}
 }
-$settingsdb->close();
 
 // add photo to database
 $db_filename = SQLite3::escapeString($target_filename);
@@ -170,31 +139,10 @@ $db_meta = SQLite3::escapeString($metadata);
 $db->exec("INSERT INTO photos (filename, timestamp, meta) VALUES ('{$db_filename}', {$db_timestamp}, '{$db_meta}');");
 
 
-// create public version of photo with embedded text
-$img = imagecreatefromjpeg($photo_finalname);
-$img = imagerotate($img, 180, 0);
-$white = imagecolorallocate($img, 255, 255, 255);
-$black = imagecolorallocate($img, 0, 0, 0);
-$font = "./CascadiaMono-SemiBold.otf";
-$height = imagesy($img);
-$width = imagesx($img);
-imagettfstroketext($img, 20, 0, 10, 20+10, $white, $black, $font, PHOTOTEXT_TOP, 2);
-imagettfstroketext($img, 20, 0, 10, $height-10, $white, $black, $font, PHOTOTEXT_BOTTOM, 2);
-setlocale(LC_TIME, "de_DE");
-date_default_timezone_set('Europe/Berlin');
-$datestr = strftime("%Y-%m-%d %H:%M:%S %Z");
-date_default_timezone_set("UTC");
-setlocale(LC_ALL, '');
-$boundingbox = imagettfbbox(20, 0, $font, $datestr);
-imagettfstroketext($img, 20, 0, $width-$boundingbox[4]-10, 20+10, $white, $black, $font, $datestr, 2);
-imagejpeg($img, PHOTOPUBLICDIR."/webcam_1.jpg.part", 100);
-rename(PHOTOPUBLICDIR."/webcam_1.jpg.part", PHOTOPUBLICDIR."/webcam_1.jpg");
-
-
 // calculate delta of operational parameters to be updated
 $config_to_send = array();
 $result = $db->querySingle("SELECT active_config, modified_config FROM config WHERE cam_id=1", true);
-if ($result !== false) {
+if ($result !== false) { 
 	$active_config = json_decode($result["active_config"], true);
 	$modified_config = json_decode($result["modified_config"], true);
 	foreach($modified_config as $key => $value) {
