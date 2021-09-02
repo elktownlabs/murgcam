@@ -60,14 +60,14 @@
               <v-list-item-subtitle>Library of taken photos</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item to="/frequency">
+          <v-list-item v-if="this.$store.getters.hasRight('freq')" to="/frequency">
             <v-list-item-icon><v-icon>mdi-clock-fast</v-icon></v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Photo Frequency</v-list-item-title>
               <v-list-item-subtitle>Temporarily increase photo frequency</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-list-item to="/settings">
+          <v-list-item v-if="this.$store.getters.hasRight('set')" to="/settings">
             <v-list-item-icon><v-icon>mdi-cogs</v-icon></v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Camera Settings</v-list-item-title>
