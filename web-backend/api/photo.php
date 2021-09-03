@@ -157,7 +157,7 @@ if ($do_base64) {
 	}
 
 	// add photo
-	$data["photo"] = "data:image/jpg;base64," . base64_encode($flipped_photo);
+	$data["photo"] = "data:image/jpg;base64," . base64_encode($photo);
 	header('Content-Type: application/json');
 	echo json_encode($data);
 } else {
