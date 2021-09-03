@@ -1,0 +1,11 @@
+[Unit]
+Description=Webcam Cleanup Script
+
+[Service]
+Type=oneshot
+ExecStart=/var/www/dev-wwv-schwarzwald/webcam/db/cleanup.sh
+WorkingDirectory=/var/www/dev-wwv-schwarzwald/webcam/db
+
+
+[Install]
+WantedBy=multi-user.target
