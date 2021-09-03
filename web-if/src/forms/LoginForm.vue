@@ -15,6 +15,7 @@
                         ref="user"
                         type="text"
                         v-model="loginUser"
+                        v-on:keyup.enter="login"
                       ></v-text-field>
                       <v-text-field
                         id="password"
@@ -22,10 +23,14 @@
                         label="Password"
                         type="password"
                         v-model="loginPassword"
+                        v-on:keyup.enter="login"
                       ></v-text-field>
                   </v-form>
                   <div v-if="accessDenied" class="red darken-2 text-center px-4 py-1 mt-3">
                     <span class="white--text">Access Denied</span>
+                  </div>
+                  <div v-if="message" class="red darken-2 text-center px-4 py-1 mt-3">
+                    <span class="white--text">{{ message }}</span>
                   </div>
                 </v-card-text>
                 <v-card-actions>
@@ -45,6 +50,7 @@
 
   export default {
     name: "LoginForm",
+    props: ['message'],
     methods: {
       login() {
         this.$store.dispatch(AUTH_REQUEST, { user: this.loginUser, password: this.loginPassword }).then(() => {
@@ -52,6 +58,7 @@
           this.$router.push('/photos')
         }).catch(() => {
           this.accessDenied = true
+          this.message = null
       });
     }
   },

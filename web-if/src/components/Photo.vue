@@ -74,6 +74,7 @@
 <script>
     import axios from 'axios';
     import store from "../store";
+    import { AUTH_LOGOUT } from "../store/actions/auth";
 
     export default {
         name: 'Photo',
@@ -186,6 +187,13 @@
             this.telemetry = response.data.telemetry
             this.cellProvider = response.data.cell_provider
             this.cellSite = response.data.cell_site
+          }, (error) => {
+            if (error.response.status == 401) {
+              // session expired
+              this.$store.dispatch(AUTH_LOGOUT).then(() => {
+                this.$router.push({name: 'Login', params: { message: 'Your session expired.'}})
+              }).catch(() => { /* TODO */ });
+            }
           });
         }
       },

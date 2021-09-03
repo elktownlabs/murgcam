@@ -22,6 +22,7 @@
 <script>
   import axios from 'axios'
   import store from "../store"
+  import { AUTH_LOGOUT } from "../store/actions/auth";
 
   export default {
     name: "DayPicker",
@@ -38,6 +39,13 @@
           response.data.forEach(element => {
             this.daysWithPhotos.push(element.substr(0,10))
           })
+        }, (error) => {
+            if (error.response.status == 401) {
+              // session expired
+              this.$store.dispatch(AUTH_LOGOUT).then(() => {
+                this.$router.push({name: 'Login', params: { message: 'Your session expired.'}})
+              }).catch(() => { /* TODO */ });
+            }
         });
       }
     },
