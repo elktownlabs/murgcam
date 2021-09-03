@@ -1,0 +1,21 @@
+{
+        "firmare":      "0.0.1",
+        "gsm_bcch":     988,
+        "gsm_rxl":      24,
+        "gsm_rxq":      0,
+        "gsm_mcc":      262,
+        "gsm_mnc":      3,
+        "gsm_bsic":     28,
+        "gsm_cellid":   39021,
+        "gsm_rla":      5,
+        "gsm_txp":      5,
+        "gsm_lac":      59063,
+        "gsm_ta":       4,
+        "gsm_voltage":  3999,
+        "voltage_min_cell_negotiation": 12.782890102847377,
+        "current_avg_cell_negotiation": 0.0943,
+        "vsupply_startup":      12.856642353587452,
+        "vshunt_startup":       0.00060001831110568561,
+        "current_startup":      0.0121,
+        "power_startup":        0.155
+}
