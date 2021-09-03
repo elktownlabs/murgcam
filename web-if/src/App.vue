@@ -97,7 +97,7 @@ import { AUTH_LOGOUT } from "./store/actions/auth";
 export default {
   name: 'App',
   mounted() {
-    document.title = "WebCam Admin Interface"
+    document.title = "MurgCam Admin Interface"
   },
   methods: {
     logout() {
