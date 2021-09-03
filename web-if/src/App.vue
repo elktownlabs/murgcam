@@ -3,7 +3,7 @@
     <v-app-bar dense app v-if="this.$store.getters.isAuthenticated">
       <v-app-bar-title><v-icon class="mx-3">mdi-camera-wireless</v-icon>MurgCam</v-app-bar-title>
       <v-spacer/>
-      <v-btn to="/photos" class="mx-1 hidden-sm-and-down" dark color="primary"><v-icon>mdi-camera</v-icon><span>Photos</span></v-btn>      
+      <v-btn to="/photos" class="mx-1 hidden-sm-and-down" dark color="primary"><v-icon>mdi-camera</v-icon><span>Photos</span></v-btn>
       <v-btn v-if="this.$store.getters.hasRight('freq')" to="/frequency" class="mx-1 hidden-sm-and-down" dark color="primary"><v-icon>mdi-clock-fast</v-icon><span>Photo Freq.</span></v-btn>
       <v-btn v-if="this.$store.getters.hasRight('set')" to="/settings" class="mx-1 hidden-sm-and-down" dark color="primary"><v-icon>mdi-cogs</v-icon><span>Settings</span></v-btn>
       <div class="mx-3"></div>

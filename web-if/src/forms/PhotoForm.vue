@@ -2,7 +2,7 @@
   <v-container class="my-3 mx-auto">
     <v-row class="my-3">
       <v-toolbar dense flat>
-        <v-btn small :disabled="photoidx<=0" @click="prevPhoto" dark color="indigo"><v-icon>mdi-chevron-left</v-icon><span class="d-none d-md-block">Prev. Photo</span></v-btn>
+        <v-btn small :disabled="photoidx<=0" @click="prevPhoto" dark color="primary"><v-icon>mdi-chevron-left</v-icon><span class="d-none d-md-block">Prev. Photo</span></v-btn>
         <v-spacer/>
         <DayPicker ref="dayPicker" v-model="day" />
         <v-select v-model="photo" :items="photos" label="Time">
@@ -14,7 +14,7 @@
             </template>
         </v-select>
         <v-spacer/>
-        <v-btn small :disabled="photoidx>=(photos.length-1)" @click="nextPhoto" dark color="indigo"><span class="d-none d-md-block">Next Photo</span><v-icon>mdi-chevron-right</v-icon></v-btn>
+        <v-btn small :disabled="photoidx>=(photos.length-1)" @click="nextPhoto" dark color="primary"><span class="d-none d-md-block">Next Photo</span><v-icon>mdi-chevron-right</v-icon></v-btn>
       </v-toolbar>
     </v-row>
     <v-row>
