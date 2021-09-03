@@ -1,6 +1,6 @@
 <template>
   <v-container fluid v-if="value">
-    <v-toolbar color="indigo" dark flat dense>
+    <v-toolbar color="primary" dark flat dense>
       <v-tabs v-model="tab">
           <v-spacer/>
           <v-tab key="photo">Photo</v-tab>
