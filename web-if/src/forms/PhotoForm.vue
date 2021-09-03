@@ -28,6 +28,7 @@ import DayPicker from '../components/DayPicker.vue';
 import Photo from '../components/Photo'
 import axios from 'axios';
 import store from "../store";
+import { AUTH_LOGOUT } from "../store/actions/auth";
 
 export default {
   name: 'PhotoForm',
@@ -66,6 +67,13 @@ export default {
         this.photos = response.data
         this.photoidx = this.photos.length - 1
         this.photo = this.photos[this.photoidx]
+      }, (error) => {
+        if (error.response.status == 401) {
+          // session expired
+          this.$store.dispatch(AUTH_LOGOUT).then(() => {
+            this.$router.push({name: 'Login', params: { message: 'Your session expired.'}})
+          }).catch(() => { /* TODO */ });
+        }
       });
     },
   },

@@ -219,6 +219,7 @@
 <script>
 import axios from 'axios';
 import store from "../store";
+import { AUTH_LOGOUT } from "../store/actions/auth";
 
 export default {
   name: 'SettingsForm',
@@ -320,6 +321,12 @@ export default {
         this.alert_error = false
         window.scrollTo(0,0);
       }, (error) => {
+        if (error.response.status == 401) {
+          // session expired
+          this.$store.dispatch(AUTH_LOGOUT).then(() => {
+            this.$router.push({name: 'Login', params: { message: 'Your session expired.'}})
+          }).catch(() => { /* TODO */ });
+        }
         this.loaded = false
         this.alert_error_text = error.message
         this.alert_error = true
@@ -358,6 +365,12 @@ export default {
       this.alert_error = false
 
     }, (error) => {
+      if (error.response.status == 401) {
+        // session expired
+        this.$store.dispatch(AUTH_LOGOUT).then(() => {
+          this.$router.push({name: 'Login', params: { message: 'Your session expired.'}})
+        }).catch(() => { /* TODO */ });
+      }
       this.loaded = false
       this.alert_error_text = error.message
       this.alert_error = true
