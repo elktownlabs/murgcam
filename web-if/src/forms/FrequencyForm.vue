@@ -10,9 +10,9 @@
               <v-col cols="12">
                 <h3 ref="radio" class="text-h5">Current State</h3>
                 <div class="my-4">
-                  The camera is operating in <b>{{ modeName(current_settings.mode) }} mode</b>{{ ((current_settings.end != null) && (requested_settings != null))? " until " + current_settings.end : "" }}.<br/>
+                  The camera is operating in <b>{{ modeName(current_settings.mode) }} mode</b>{{ ((current_settings.end != null) && (requested_settings == null))? " until " + new Date(current_settings.end).toLocaleString() : "" }}.<br/>
                   <span v-if="requested_settings != null">Switch to <b>{{ modeName(requested_settings.mode) }} mode</b>{{ requested_settings.mode_end != null ? " until " + new Date(requested_settings.mode_end).toLocaleString() : "" }} is scheduled.<br/>Waiting for camera contact.</span></div>
-                <v-btn v-if="canCancelRequest()" @click="apply_regular_mode()" class="mr-4 my-4 primary">Go back to regular mode / cancel mode change</v-btn>
+                <v-btn v-if="canCancelRequest()" @click="apply_regular_mode()" class="mr-4 my-4 primary">Cancel Mode</v-btn>
               </v-col>
               <v-col cols="12">
                 <h3 ref="radio" class="text-h5">Temporarily Increase Frequency</h3>
@@ -55,6 +55,7 @@ export default {
     duration: null,
     mode: null,
     tab: null,
+    updateInterval: null
   }),
   methods: {
     modeName(str) {
@@ -73,7 +74,7 @@ export default {
       // a mode other than regular is requested
       if (this.requested_settings && this.requested_settings.mode > 0) return true
       // we want to go to regular mode and cam is in fast or express mode
-      if (this.requested_settings && this.requested_settings.mode == 0 & this.current_settings.mode > 0) return true
+      if (this.current_settings && this.current_settings.mode > 0) return true
       return false
     },
     applicable() {
@@ -136,30 +137,39 @@ export default {
         this.alert_success = false
       });
     },
+    reload_current_mode() {
+      axios.post(process.env['VUE_APP_BACKENDURL']+'/get_frequency', {
+        token: store.getters.currentToken,
+      })
+      .then((response) => {
+          this.current_settings = response.data.current
+          this.requested_settings = response.data.requested
+          this.loaded = true
+          this.alert_success = false
+          this.alert_error = false
+        }, (error) => {
+          if (error.response.status == 401) {
+            // session expired
+            this.$store.dispatch(AUTH_LOGOUT).then(() => {
+              this.$router.push({name: 'Login', params: { message: 'Your session expired.'}})
+            }).catch(() => { /* TODO */ });
+          }
+          this.loaded = false
+          this.alert_error_text = error.message
+          this.alert_error = true
+          this.alert_success = false
+      });
+    }
+  },
+  created() {
+    this.updateInterval = setInterval(function() { this.reload_current_mode() }.bind(this), 30000)
+  },
+  destroyed() {
+    clearInterval(this.updateInterval)
   },
   mounted () {
-    axios.post(process.env['VUE_APP_BACKENDURL']+'/get_frequency', {
-      token: store.getters.currentToken,
-    })
-    .then((response) => {
-        this.current_settings = response.data.current
-        this.requested_settings = response.data.requested
-        this.loaded = true
-        this.alert_success = false
-        this.alert_error = false
-      }, (error) => {
-        if (error.response.status == 401) {
-          // session expired
-          this.$store.dispatch(AUTH_LOGOUT).then(() => {
-            this.$router.push({name: 'Login', params: { message: 'Your session expired.'}})
-          }).catch(() => { /* TODO */ });
-        }
-        this.loaded = false
-        this.alert_error_text = error.message
-        this.alert_error = true
-        this.alert_success = false
-    });
-}
+    this.reload_current_mode();
+  }
 };
 </script>
 
