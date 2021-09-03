@@ -41,7 +41,7 @@ if (!array_key_exists("token", $data)) {
         header('HTTP/1.0 401 Unauthorized');
         return;
 }
-$query = $appdb->prepare("SELECT s.expiration as expiration, u.rights as rights FROM active_logins s, users u WHERE u.id=s.user_id AND token=? LIMIT 1;");
+$query = $appdb->prepare("SELECT s.expiration as expiration, u.rights as rights, u.id as user_id FROM active_logins s, users u WHERE u.id=s.user_id AND token=? LIMIT 1;");
 $query->bindParam(1, $data["token"], SQLITE3_TEXT);
 $resultset = $query->execute();
 $userid = null;
