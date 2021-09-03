@@ -93,15 +93,6 @@ $filename = "cam_" . $id . ".jpg";
 
 $photo = file_get_contents(PHOTODIR."/".$filename);
 
-// temporary image flipping
-$stream = fopen("php://memory", "w+");
-$gdphoto = imagecreatefromjpeg(PHOTODIR."/".$filename);
-imageflip($gdphoto, IMG_FLIP_VERTICAL);
-imagejpeg($gdphoto, $stream);
-rewind($stream);
-$flipped_photo = stream_get_contents($stream);
-
-
 if ($photo === false) {
     header('HTTP/1.0 404 Not Found');
     exit;
@@ -162,7 +153,7 @@ if ($do_base64) {
 	echo json_encode($data);
 } else {
 	header("Content-Type: image/jpeg");
-	echo $flipped_photo;
+	echo $photo;
 }
 
 ?>
