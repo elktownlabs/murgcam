@@ -74,7 +74,7 @@ $returnvalue["current"]["start"] = unix2iso($result["current_mode_start"]);
 $returnvalue["current"]["end"] = unix2iso($result["current_mode_end"]);
 $returnvalue["current"]["initiating_user"] = $result["current_mode_initiating_user"];
 $returnvalue["current"]["initiating_time"] = unix2iso($result["current_mode_initiating_time"]);
-if ($result["requested_mode"] !== null) {
+if ($result["requested_mode"] !== null && ($result["requested_mode"] != 0 && $result["current_mode"] != 0)) {
     $returnvalue["requested"]["mode"] = $result["requested_mode"];
     $returnvalue["requested"]["mode_end"] = unix2iso($result["requested_mode_end"]);
     $returnvalue["requested"]["mode_initiating_time"] = unix2iso($result["requested_mode_initiating_time"]);
