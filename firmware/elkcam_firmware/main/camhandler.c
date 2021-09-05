@@ -9,6 +9,7 @@
 #include "sensor.h"
 #include "configstorage.h"
 #include "ov2640.h"
+#include "config.h"
 
 /* camera module pin-out */
 #define CAM_PIN_PWDN    (-1)
@@ -89,6 +90,8 @@ void camhandler_load_config_from_nvs()
     ESP_LOGI(TAG, "Setting sharpness to %d", config->sharpness);
     OV2640_Mirror_Set(0, 1);
     ESP_LOGI(TAG, "Setting flip/mirror to 0");
+    ESP_LOGI(TAG, "Waiting for camera to settle");
+    vTaskDelay(CAM_SETTLE_TIME / portTICK_PERIOD_MS);
 }
 
 esp_err_t init_cam()
@@ -98,7 +101,7 @@ esp_err_t init_cam()
     power_cam(0);
     vTaskDelay(500 / portTICK_PERIOD_MS);
     power_cam(1);
-    vTaskDelay(4000 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     ESP_LOGI(TAG, "Resetting cam");
     reset_cam(1);
     vTaskDelay(50 / portTICK_PERIOD_MS);
