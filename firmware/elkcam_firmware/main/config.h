@@ -1,11 +1,14 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define ELKCAM_SW_VERSION "1.0.0"
+#define ELKCAM_SW_VERSION "1.1.0"
 #define ELKCAM_SW_DATE "07/24/2021"
 
 /* wifi */
 #define CAM_CONFIG_SSID "elkcam"
+
+/* minimum sleep time between photos in ms */
+#define CAM_MINIMUM_SLEEP_TIME (60000)
 
 
 /* default picture settings */
