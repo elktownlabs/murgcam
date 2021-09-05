@@ -11,7 +11,10 @@
 #define CAM_MINIMUM_SLEEP_TIME (60000)
 
 /* camera settle time after changing settings in ms*/
-#define CAM_SETTLE_TIME (60000)
+#define CAM_SETTLE_TIME (4000)
+
+/* time to allow for the upload to finish in secs */
+#define CAM_UPLOAD_TIMEOUT (10*60)
 
 /* default picture settings */
 #define CAM_DEFAULT_QUALITY (10)  /* 0 - 63 */
