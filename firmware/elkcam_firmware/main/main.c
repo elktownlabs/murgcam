@@ -338,11 +338,22 @@ void app_main(void)
 
         /* go back to sleep */
         TickType_t timeAlive = xTaskGetTickCount() * portTICK_PERIOD_MS;
-        unsigned long long actual_time_to_sleep = (sleep_time * 1000) - timeAlive;
-        /* sleep at least for a minute */
-        if (actual_time_to_sleep <= 60000) {
-            ESP_LOGI(TAG, "Time to sleep determined to be %llu ms. Need to sleep at least 60000 ms", actual_time_to_sleep);
-            actual_time_to_sleep = 60000;
+        unsigned long long actual_time_to_sleep = (sleep_time * 1000);
+        if (actual_time_to_sleep > timeAlive) {
+            /* substract the time we've been awake from the time we want to sleep. This helps */
+            /* to keep the time between photos roughly equal */
+            actual_time_to_sleep -= timeAlive;
+        } else {
+            /* we were alive longer than we are supposed to sleep. Sleep for the minimum time allowed */
+            ESP_LOGI(TAG, "Alive for %d ms which is longer than supposed %u ms sleep time. Sleeping for minimum time of %u ms",
+                timeAlive, sleep_time, CAM_MINIMUM_SLEEP_TIME);
+            actual_time_to_sleep = CAM_MINIMUM_SLEEP_TIME;
+        }
+        /* make sure we sleep for a minimum time between photos */
+        if (actual_time_to_sleep < CAM_MINIMUM_SLEEP_TIME) {
+            ESP_LOGI(TAG, "Time to sleep determined to be %llu ms. Need to sleep at least %u ms",
+                actual_time_to_sleep, CAM_MINIMUM_SLEEP_TIME);
+            actual_time_to_sleep = CAM_MINIMUM_SLEEP_TIME;
         }
         ESP_LOGI(TAG, "Up for %d ms. Going to sleep for %llu ms", timeAlive, actual_time_to_sleep);
         esp_sleep_enable_timer_wakeup(actual_time_to_sleep * (unsigned long long)1000);
