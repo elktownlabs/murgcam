@@ -10,6 +10,8 @@
 /* minimum sleep time between photos in ms */
 #define CAM_MINIMUM_SLEEP_TIME (60000)
 
+/* camera settle time after changing settings in ms*/
+#define CAM_SETTLE_TIME (60000)
 
 /* default picture settings */
 #define CAM_DEFAULT_QUALITY (10)  /* 0 - 63 */
