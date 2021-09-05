@@ -289,7 +289,7 @@ void app_main(void)
         // only if connection was successful
         if (modemInitSuccessful) {
             int uploadFinished = 0;
-            for (int i=0; i<90; i++) {
+            for (int i=0; i<CAM_UPLOAD_TIMEOUT; i++) {
                 /* wait until upload to server is done */
                 if( xSemaphoreTake(sm_uploadeComplete, pdMS_TO_TICKS(1000)) == pdTRUE ) {
                     ESP_LOGI(TAG, "Upload has finished. Shutting everything down.");
