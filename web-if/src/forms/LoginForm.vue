@@ -41,7 +41,7 @@
           </v-flex>
       </v-layout>
     </v-container>
-    <v-layout align-center justify-center>  <span class="font-weight-thin caption" >v0.3</span></v-layout>
+    <v-layout align-center justify-center>  <span class="font-weight-thin caption" >v0.4</span></v-layout>
   </v-main>
 </template>
 

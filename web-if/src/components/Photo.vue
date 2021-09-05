@@ -5,6 +5,7 @@
           <v-spacer/>
           <v-tab key="photo">Photo</v-tab>
           <v-tab key="telemetry">Telemetry</v-tab>
+          <v-tab v-if="this.$store.getters.hasRight('del')" key="operations">Operations</v-tab>
           <v-spacer/>
       </v-tabs>
     </v-toolbar>
@@ -68,6 +69,26 @@
           </v-card-text>
         </v-card>
       </v-tab-item>
+      <v-tab-item v-if="this.$store.getters.hasRight('del')" key="operations">
+        <v-card color="grey lighten-3" flat class="d-flex justify-center py-6">
+          <v-card color="grey lighten-3" outlined tile>
+            <v-dialog v-model="deleteDialog" persistent  max-width="290">
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn color="red" dark v-bind="attrs" v-on="on">Delete Photo</v-btn>
+              </template>
+              <v-card>
+                <v-card-title class="text-h5">Delete Photo?</v-card-title>
+                <v-card-text>If you proceed, the photo will be irreversibly deleted.</v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="green darken-1" dark @click="deleteDialog = false">Cancel</v-btn>
+                  <v-btn color="red darken-1" dark @click="deleteDialog=false; if (value !== null) $emit('deleted', value.id)">Proceed</v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-card>
+        </v-card>
+      </v-tab-item>
     </v-tabs-items>
   </v-container>
 </template>
@@ -82,6 +103,7 @@
         },
         props: [ 'value' ],
     data: () => ({
+        deleteDialog: null,
         rxqColor: {
           0: "color: green",
           1: "color: green",
