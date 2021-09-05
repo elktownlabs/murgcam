@@ -25,29 +25,44 @@ use lsolesen\pel\PelJpeg;
 use lsolesen\pel\PelTag;
 use lsolesen\pel\PelTiff;
 
+openlog("webcam-uploader", LOG_PID | LOG_PERROR, LOG_LOCAL0);
+syslog(LOG_NOTICE, "upload initiated");
+
 // check that database exists
 if (!is_file(DATABASE)) {
-        header("HTTP/1.1 500 Internal Server Error");
+	header("HTTP/1.1 500 Internal Server Error");
+	syslog(LOG_ERR, "Photo database not found: ".DATABASE);
+	closelog();
         return;
 }
 if (!is_file(APPDATABASE)) {
-        header("HTTP/1.1 500 Internal Server Error");
+	header("HTTP/1.1 500 Internal Server Error");
+	syslog(LOG_ERR, "App database not found: ".APPDATABASE);
+	closelog();
         return;
 }
 $db = new SQLite3(DATABASE);
 if (is_null($db)) {
-        header("HTTP/1.1 500 Internal Server Error");
+	header("HTTP/1.1 500 Internal Server Error");
+	syslog(LOG_ERR, "Photo database could not be opened: ".DATABASE);
+	closelog();
         return;
 }
 $appdb = new SQLite3(APPDATABASE);
 if (is_null($appdb)) {
-        header("HTTP/1.1 500 Internal Server Error");
+	header("HTTP/1.1 500 Internal Server Error");
+	syslog(LOG_ERR, "App database could not be opened: ".APPDATABASE);
+	closelog();
         return;
 }
 
 // check that photo directory exists
 if (!is_dir(PHOTODIR)) {
 	header("HTTP/1.1 500 Internal Server Error");
+	syslog(LOG_ERR, "Photo target directory does not exist: ".PHOTODIR);
+	$db->close();
+	$appdb->close();
+	closelog();
 	return;
 }
 
@@ -61,8 +76,10 @@ $db_timestamp = $upload_timestamp->getTimestamp();
 if (!array_key_exists("photo",  $_FILES)) {
 	$results = $db->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 1);");
 	header("HTTP/1.1 400 Bad Request");
+	syslog(LOG_ERR, "Submitted data does not include a photo");
 	$db->close();
 	$appdb->close();
+	closelog();
 	return;
 }
 
@@ -70,8 +87,10 @@ if (!array_key_exists("photo",  $_FILES)) {
 if ($_FILES["photo"]["error"] != UPLOAD_ERR_OK) {
 	$results = $db->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 2);");
 	header("HTTP/1.1 400 Bad Request");
+	syslog(LOG_ERR, "Submitted data signalled an error: ".$_FILES["photo"]["error"]);
 	$db->close();
 	$appdb->close();
+	closelog();
 	return;
 }
 
@@ -83,8 +102,10 @@ $res = move_uploaded_file($photo_tmpname, $photo_finalname);
 if (!$res) {
 	$results = $db->exec("INSERT INTO photos (timestamp, error) VALUES ({$db_timestamp}, 3);");
 	header("HTTP/1.1 500 Internal Server Error");
+	syslog(LOG_ERR, "Could not move $photo_tmpname to $photo_finalname");
 	$db->close();
 	$appdb->close();
+	closelog();
 	return;
 }
 
@@ -92,96 +113,99 @@ if (!$res) {
 $archive_photo = fopen("php://memory", "w+");
 $public_photo = fopen("php://memory", "w+");
 $imgdata = imagecreatefromjpeg($photo_finalname);
-imageflip($imgdata, IMG_FLIP_VERTICAL);
-// the flipped image without any additions is used for the archive
-imagejpeg($imgdata, $archive_photo);
-rewind($archive_photo);
+if ($imgdata) {
+	imageflip($imgdata, IMG_FLIP_VERTICAL);
+	// the flipped image without any additions is used for the archive
+	imagejpeg($imgdata, $archive_photo);
+	rewind($archive_photo);
 
-// write some text onto the photo for the public version
-$white = imagecolorallocate($imgdata, 255, 255, 255);
-$black = imagecolorallocate($imgdata, 0, 0, 0);
-$height = imagesy($imgdata);
-$width = imagesx($imgdata);
-imagettfstroketext($imgdata, 15, 0, 10, 20+10, $white, $black, PUBLICTITLEFONT, PUBLICTITLE, 2);
-imagettfstroketext($imgdata, 15, 0, 10, $height-10, $white, $black, PUBLICTITLEFONT, PUBLICSUBTITLE, 2);
-setlocale(LC_TIME, "de_DE");
-date_default_timezone_set("Europe/Berlin");
-$datestr = strftime("%Y-%m-%d %H:%M:%S %Z");
-date_default_timezone_set("UTC");
-$boundingbox = imagettfbbox(15, 0, PUBLICTITLEFONT, $datestr);
-imagettfstroketext($imgdata, 15, 0, $width-$boundingbox[4]-10, 20+10, $white, $black, PUBLICTITLEFONT, $datestr, 2);
-imagejpeg($imgdata, $public_photo);
-rewind($public_photo);
+	// write some text onto the photo for the public version
+	$white = imagecolorallocate($imgdata, 255, 255, 255);
+	$black = imagecolorallocate($imgdata, 0, 0, 0);
+	$height = imagesy($imgdata);
+	$width = imagesx($imgdata);
+	imagettfstroketext($imgdata, 15, 0, 10, 20+10, $white, $black, PUBLICTITLEFONT, PUBLICTITLE, 2);
+	imagettfstroketext($imgdata, 15, 0, 10, $height-10, $white, $black, PUBLICTITLEFONT, PUBLICSUBTITLE, 2);
+	setlocale(LC_TIME, "de_DE");
+	date_default_timezone_set("Europe/Berlin");
+	$datestr = strftime("%Y-%m-%d %H:%M:%S %Z");
+	date_default_timezone_set("UTC");
+	$boundingbox = imagettfbbox(15, 0, PUBLICTITLEFONT, $datestr);
+	imagettfstroketext($imgdata, 15, 0, $width-$boundingbox[4]-10, 20+10, $white, $black, PUBLICTITLEFONT, $datestr, 2);
+	imagejpeg($imgdata, $public_photo);
+	rewind($public_photo);
 
-// add exif information to archive photo
-$data = new PelDataWindow(stream_get_contents($archive_photo));
-$jpeg = new PelJpeg();
-$jpeg->load($data);
-$exif = new PelExif();
-$jpeg->setExif($exif);
-$tiff = new PelTiff();
-$exif->setTiff($tiff);
-$ifd0 = new PelIfd(PelIfd::IFD0);
-$tiff->setIfd($ifd0);
-$entry = new PelEntryAscii(PelTag::DOCUMENT_NAME, $target_filename);
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::ARTIST, "WWV Schwarzwald e.V.");
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::MAKE, "Elktown Labs.");
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::MODEL, "Murgcam");
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::IMAGE_DESCRIPTION, "Photo of the one and only river Murg! Come and enjoy some of the best whitewater in Germany! (".  date_format($upload_timestamp, 'c') . " UTC)");
-$ifd0->addEntry($entry);
-$entry = new PelEntryShort(PelTag::ORIENTATION, 1);
-$ifd0->addEntry($entry);
-$entry = new PelEntryTime(PelTag::DATE_TIME, $upload_timestamp->getTimestamp());
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::COPYRIGHT, "Copyright WWV Schwarzwald e.V., " . $upload_timestamp->format("Y") . ". All rights reserved.");
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::SOFTWARE, "{$upload_timestamp->getTimestamp()}");
-$ifd0->addEntry($entry);
-$ifdexif = new PelIfd(PelIfd::EXIF);
-$ifd0->addSubIfd($ifdexif);
-$entry = new PelEntryAscii(PelTag::IMAGE_UNIQUE_ID, "{$photo_uniqueid}");
-$ifdexif->addEntry($entry);
-$jpeg->saveFile($photo_finalname);
+	// add exif information to archive photo
+	$data = new PelDataWindow(stream_get_contents($archive_photo));
+	$jpeg = new PelJpeg();
+	$jpeg->load($data);
+	$exif = new PelExif();
+	$jpeg->setExif($exif);
+	$tiff = new PelTiff();
+	$exif->setTiff($tiff);
+	$ifd0 = new PelIfd(PelIfd::IFD0);
+	$tiff->setIfd($ifd0);
+	$entry = new PelEntryAscii(PelTag::DOCUMENT_NAME, $target_filename);
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::ARTIST, "WWV Schwarzwald e.V.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::MAKE, "Elktown Labs.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::MODEL, "Murgcam");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::IMAGE_DESCRIPTION, "Photo of the one and only river Murg! Come and enjoy some of the best whitewater in Germany! (".  date_format($upload_timestamp, 'c') . " UTC)");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryShort(PelTag::ORIENTATION, 1);
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryTime(PelTag::DATE_TIME, $upload_timestamp->getTimestamp());
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::COPYRIGHT, "Copyright WWV Schwarzwald e.V., " . $upload_timestamp->format("Y") . ". All rights reserved.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::SOFTWARE, "{$upload_timestamp->getTimestamp()}");
+	$ifd0->addEntry($entry);
+	$ifdexif = new PelIfd(PelIfd::EXIF);
+	$ifd0->addSubIfd($ifdexif);
+	$entry = new PelEntryAscii(PelTag::IMAGE_UNIQUE_ID, "{$photo_uniqueid}");
+	$ifdexif->addEntry($entry);
+	$jpeg->saveFile($photo_finalname);
 
-// add exif information to public photo
-$data = new PelDataWindow(stream_get_contents($public_photo));
-$jpeg = new PelJpeg();
-$jpeg->load($data);
-$exif = new PelExif();
-$jpeg->setExif($exif);
-$tiff = new PelTiff();
-$exif->setTiff($tiff);
-$ifd0 = new PelIfd(PelIfd::IFD0);
-$tiff->setIfd($ifd0);
-$entry = new PelEntryAscii(PelTag::DOCUMENT_NAME, $target_filename);
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::ARTIST, "WWV Schwarzwald e.V.");
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::MAKE, "Elktown Labs.");
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::MODEL, "Murgcam");
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::IMAGE_DESCRIPTION, "Photo of the one and only river Murg! Come and enjoy some of the best whitewater in Germany! (".  date_format($upload_timestamp, 'c') . " UTC)");
-$ifd0->addEntry($entry);
-$entry = new PelEntryShort(PelTag::ORIENTATION, 1);
-$ifd0->addEntry($entry);
-$entry = new PelEntryTime(PelTag::DATE_TIME, $upload_timestamp->getTimestamp());
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::COPYRIGHT, "Copyright WWV Schwarzwald e.V., " . $upload_timestamp->format("Y") . ". All rights reserved.");
-$ifd0->addEntry($entry);
-$entry = new PelEntryAscii(PelTag::SOFTWARE, "{$upload_timestamp->getTimestamp()}");
-$ifd0->addEntry($entry);
-$ifdexif = new PelIfd(PelIfd::EXIF);
-$ifd0->addSubIfd($ifdexif);
-$entry = new PelEntryAscii(PelTag::IMAGE_UNIQUE_ID, "{$photo_uniqueid}");
-$ifdexif->addEntry($entry);
-$jpeg->saveFile(PUBLICIMGLOCATION.".part");
-rename(PUBLICIMGLOCATION.".part", PUBLICIMGLOCATION);
-
+	// add exif information to public photo
+	$data = new PelDataWindow(stream_get_contents($public_photo));
+	$jpeg = new PelJpeg();
+	$jpeg->load($data);
+	$exif = new PelExif();
+	$jpeg->setExif($exif);
+	$tiff = new PelTiff();
+	$exif->setTiff($tiff);
+	$ifd0 = new PelIfd(PelIfd::IFD0);
+	$tiff->setIfd($ifd0);
+	$entry = new PelEntryAscii(PelTag::DOCUMENT_NAME, $target_filename);
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::ARTIST, "WWV Schwarzwald e.V.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::MAKE, "Elktown Labs.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::MODEL, "Murgcam");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::IMAGE_DESCRIPTION, "Photo of the one and only river Murg! Come and enjoy some of the best whitewater in Germany! (".  date_format($upload_timestamp, 'c') . " UTC)");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryShort(PelTag::ORIENTATION, 1);
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryTime(PelTag::DATE_TIME, $upload_timestamp->getTimestamp());
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::COPYRIGHT, "Copyright WWV Schwarzwald e.V., " . $upload_timestamp->format("Y") . ". All rights reserved.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::SOFTWARE, "{$upload_timestamp->getTimestamp()}");
+	$ifd0->addEntry($entry);
+	$ifdexif = new PelIfd(PelIfd::EXIF);
+	$ifd0->addSubIfd($ifdexif);
+	$entry = new PelEntryAscii(PelTag::IMAGE_UNIQUE_ID, "{$photo_uniqueid}");
+	$ifdexif->addEntry($entry);
+	$jpeg->saveFile(PUBLICIMGLOCATION.".part");
+	rename(PUBLICIMGLOCATION.".part", PUBLICIMGLOCATION);
+} else {
+        syslog(LOG_ERR, "Image seems to be invalid");
+}
 
 // check if we have meta data
 $metadata = null;
@@ -204,7 +228,10 @@ if ($metadata !== null) {
 			$query->bindParam(1, $settings_encoded, SQLITE3_TEXT);
 			$query->bindParam(2, $db_timestamp, SQLITE3_TEXT);
 			$result = $query->execute();
+			syslog(LOG_NOTICE, "Metadata submitted: ".$metadata);
 		}
+	} else {
+		syslog(LOG_WARNING, "Metadata is not valid json: ".$metadata);
 	}
 }
 
@@ -268,8 +295,13 @@ if ($result !== false) {
 					$start_time->modify("+1 day");
 					$interval = $start_time->getTimestamp() - $current_time->getTimestamp();
 				}
-				$config_to_send["sys_secs_between_photos_transient"] = $interval;
-				$transient_secs_determined = true;
+
+				// if we are within 10mins of the interval start, assume that this is the first picture
+				// of the interval which came a early due to clock drift.
+				if ($interval >= 10*60) {
+					$config_to_send["sys_secs_between_photos_transient"] = $interval;
+					$transient_secs_determined = true;
+				}
 			}
 		}
 	}
@@ -381,3 +413,4 @@ header('Content-type:application/json;charset=utf-8');
 print(json_encode($config_to_send, JSON_FORCE_OBJECT));
 $db->close();
 $appdb->close();
+closelog();

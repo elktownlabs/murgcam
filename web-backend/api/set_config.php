@@ -79,7 +79,9 @@ if (array_key_exists("cam", $data)) {
         }
         $cam_config = json_decode($result["modified_config"], true);
         if ($cam_config == null) $cam_config = [];
-        foreach ($data["cam"] as $key => $value) {
+	foreach ($data["cam"] as $key => $value) {
+		if ($key == "sys_secs_between_photos") { $value = intval($value); }
+		if ($key == "sys_minimum_voltage") { $value = intval($value); }
                 if (!is_object($value) && !is_array($value)) {
                         $cam_config[$key] = $value;
                 }

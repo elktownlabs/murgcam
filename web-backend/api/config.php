@@ -1,19 +1,19 @@
 <?php
 
-define('DATABASE', '/var/www/dev-wwv-schwarzwald/webcam/photos/photos.db');
-define('APPDATABASE', '/var/www/dev-wwv-schwarzwald/webcam/db/app.db');
-define('CELLDATABASE', '/var/www/dev-wwv-schwarzwald/webcam/db/cell.db');
-define('PHOTODIR', '/var/www/dev-wwv-schwarzwald/webcam/photos/');
+define('DATABASE', '/var/www/webcam/photos/photos.db');
+define('APPDATABASE', '/var/www/webcam/db/app.db');
+define('CELLDATABASE', '/var/www/webcam/db/cell.db');
+define('PHOTODIR', '/var/www/webcam/photos/');
 
 define('CORS', true);
 
 define('MASTERUSER', 'admin');
 define('MASTERPASS', 'dufgypl00!');
 
-define('PUBLICTITLEFONT', '/var/www/dev-wwv-schwarzwald/webcam/api/CascadiaMono-SemiBold.otf');
+define('PUBLICTITLEFONT', '/var/www/webcam/api/CascadiaMono-SemiBold.otf');
 define('PUBLICTITLE', 'Murg oberhalb Hundsbachmündung');
 define('PUBLICSUBTITLE', 'Wildwasserverein Schwarzwald e.V.');
-define('PUBLICIMGLOCATION', '/var/www/dev-wwv-schwarzwald/webcam/murgcam.jpg');
+define('PUBLICIMGLOCATION', '/var/www/webcam/current.jpg');
 
 date_default_timezone_set("Europe/Berlin");
 
