@@ -11,9 +11,10 @@ define('MASTERUSER', 'admin');
 define('MASTERPASS', 'supersecretpassword');
 
 define('PUBLICTITLEFONT', '/var/www/webcam/api/CascadiaMono-SemiBold.otf');
-define('PUBLICTITLE', 'Murg oberhalb Hundsbachmündung');
+define('PUBLICTITLE', 'Murg oberhalb Raumünzachmündung');
 define('PUBLICSUBTITLE', 'Wildwasserverein Schwarzwald e.V.');
 define('PUBLICIMGLOCATION', '/var/www/webcam/current.jpg');
+define('PUBLICIMGLOCATIONSMALL', '/var/www/webcam/current_small.jpg');
 
 date_default_timezone_set("Europe/Berlin");
 
