@@ -112,6 +112,7 @@ if (!$res) {
 // rotate image and write text
 $archive_photo = fopen("php://memory", "w+");
 $public_photo = fopen("php://memory", "w+");
+$small_public_photo = fopen("php://memory", "w+");
 $imgdata = imagecreatefromjpeg($photo_finalname);
 if ($imgdata) {
 	imageflip($imgdata, IMG_FLIP_VERTICAL);
@@ -134,6 +135,12 @@ if ($imgdata) {
 	imagettfstroketext($imgdata, 15, 0, $width-$boundingbox[4]-10, 20+10, $white, $black, PUBLICTITLEFONT, $datestr, 2);
 	imagejpeg($imgdata, $public_photo);
 	rewind($public_photo);
+
+	// create smaller version of photo
+	$small_public_imgdata = imagecreatetruecolor(800, 600);
+	imagecopyresampled($small_public_imgdata, $imgdata, 0, 0, 0, 0, 800, 600, $width, $height);
+	imagejpeg($small_public_imgdata, $small_public_photo);
+	rewind($small_public_photo);
 
 	// add exif information to archive photo
 	$data = new PelDataWindow(stream_get_contents($archive_photo));
@@ -203,6 +210,43 @@ if ($imgdata) {
 	$ifdexif->addEntry($entry);
 	$jpeg->saveFile(PUBLICIMGLOCATION.".part");
 	rename(PUBLICIMGLOCATION.".part", PUBLICIMGLOCATION);
+	
+	
+	// add exif information to small public photo
+	$data = new PelDataWindow(stream_get_contents($small_public_photo));
+	$jpeg = new PelJpeg();
+	$jpeg->load($data);
+	$exif = new PelExif();
+	$jpeg->setExif($exif);
+	$tiff = new PelTiff();
+	$exif->setTiff($tiff);
+	$ifd0 = new PelIfd(PelIfd::IFD0);
+	$tiff->setIfd($ifd0);
+	$entry = new PelEntryAscii(PelTag::DOCUMENT_NAME, $target_filename);
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::ARTIST, "WWV Schwarzwald e.V.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::MAKE, "Elktown Labs.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::MODEL, "Murgcam");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::IMAGE_DESCRIPTION, "Photo of the one and only river Murg! Come and enjoy some of the best whitewater in Germany! (".  date_format($upload_timestamp, 'c') . " UTC)");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryShort(PelTag::ORIENTATION, 1);
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryTime(PelTag::DATE_TIME, $upload_timestamp->getTimestamp());
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::COPYRIGHT, "Copyright WWV Schwarzwald e.V., " . $upload_timestamp->format("Y") . ". All rights reserved.");
+	$ifd0->addEntry($entry);
+	$entry = new PelEntryAscii(PelTag::SOFTWARE, "{$upload_timestamp->getTimestamp()}");
+	$ifd0->addEntry($entry);
+	$ifdexif = new PelIfd(PelIfd::EXIF);
+	$ifd0->addSubIfd($ifdexif);
+	$entry = new PelEntryAscii(PelTag::IMAGE_UNIQUE_ID, "{$photo_uniqueid}");
+	$ifdexif->addEntry($entry);
+	$jpeg->saveFile(PUBLICIMGLOCATIONSMALL.".part");
+	rename(PUBLICIMGLOCATIONSMALL.".part", PUBLICIMGLOCATIONSMALL);
+
 } else {
         syslog(LOG_ERR, "Image seems to be invalid");
 }
