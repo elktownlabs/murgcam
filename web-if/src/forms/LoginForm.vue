@@ -41,7 +41,7 @@
           </v-flex>
       </v-layout>
     </v-container>
-    <v-layout align-center justify-center>  <span class="font-weight-thin caption" >v0.4</span></v-layout>
+    <v-layout align-center justify-center>  <span class="font-weight-thin caption" >v0.5 - 12/05/2021</span></v-layout>
   </v-main>
 </template>
 
