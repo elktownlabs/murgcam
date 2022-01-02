@@ -5,6 +5,7 @@
           <v-spacer/>
           <v-tab key="photo">Photo</v-tab>
           <v-tab key="telemetry">Telemetry</v-tab>
+          <v-tab key="gauges">HVZ Gauges</v-tab>
           <v-tab v-if="this.$store.getters.hasRight('del')" key="operations">Operations</v-tab>
           <v-spacer/>
       </v-tabs>
@@ -64,6 +65,27 @@
               </thead>
               <tbody>
                 <tr><td>Firmware Version</td><td>{{ (typeof telemetry.firmware !== 'undefined') ? telemetry.firmware : "Unknown" }}</td></tr>
+              </tbody>
+            </v-simple-table>
+          </v-card-text>
+        </v-card>
+      </v-tab-item>
+      <v-tab-item key="gauges">
+        <v-card color="grey lighten-3" flat>
+          <v-card-text>
+            <p class="text-center my-2">{{ new Date(value.timestamp * 1000).toLocaleDateString("en-US",  { timeZone: 'Europe/Berlin' }) }} - {{ new Date(value.timestamp * 1000).toLocaleTimeString("en-US",  { timeZone: 'Europe/Berlin' }) }}</p>
+            <h3 class="my-3">Closest HVZ readouts at the time picture was taken</h3>
+            <v-simple-table v-if="value != null" dense color="grey lighten-3">
+              <thead>
+                <tr><th class="text-left">Gauge</th><th class="text-left">Time of readout</th><th class="text-left">Flow (cumecs)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Bad Rotenfels</td><td>12</td><td>V</td></tr>
+                <tr><td>Schwarzenberg</td><td>13</td><td>mA</td></tr>
+                <tr><td>Schönmünzach</td><td>14</td><td>V</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach</td><td>15</td><td>mA</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 20cumecs </td><td>16</td><td>mA</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 10cumecs</td><td>17</td><td>V</td></tr>
               </tbody>
             </v-simple-table>
           </v-card-text>
