@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python
 import logging
 import requests
 from jsmin import jsmin
@@ -10,6 +10,7 @@ import argparse
 import daemon
 import signal
 import sys
+import dateutil
 from daemon import pidfile
 
 sleep_time = 5 * 60
@@ -66,17 +67,21 @@ def do_work(logf, database, detach):
             jsonhvzdata = json.loads(hvzdata)
             logger.info("Successfully parsed %s", hvz_url)
             gauge_list = []
+            tzmapping = {
+                'CET': dateutil.tz.gettz('Europe/Berlin'),
+                'MEZ': dateutil.tz.gettz('Europe/Berlin'),
+                'CEST': dateutil.tz.gettz('Europe/Berlin'),
+                'MESZ': dateutil.tz.gettz('Europe/Berlin')}
+
             for wantedLine in hvz_wanted_sources:
                 for line in jsonhvzdata:
                     try:
                         number = int(line[0])
                         if number == hvz_wanted_sources[wantedLine]:
-                            line[9] = line[9].replace("MEZ", "CET")
-                            line[9] = line[9].replace("MESZ", "CEST")
                             if line[8] != "m³/s":
                                 logger.error("Unit of %s should be '%s' but actually is '%s'", wantedLine, "m³/s", line[8])
                             logger.info("Found %s: %s %s at %s", wantedLine, line[7], line[8], line[9])
-                            datadate = dateParser.parse(line[9])
+                            datadate = dateParser.parse(line[9], tzinfos=tzmapping)
                             datatimestamp = time.mktime(datadate.timetuple())
                             gauge_list.append((wantedLine, line[7], datatimestamp))
                             break

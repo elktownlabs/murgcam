@@ -1,0 +1,12 @@
+[Unit]
+Description=hvz-scraper service
+After=syslog.target network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/hvz-scraper.pid
+ExecStart=/opt/hvz-scraper/venv/bin/python3 /opt/hvz-scraper/hvz-scraper.py -p /var/run/hvz-scraper.pid -d /var/www/webcam/db/gauges.db
+ExecStop=/bin/kill -s TERM $MAINPID
+
+[Install]
+WantedBy=multi-user.target
