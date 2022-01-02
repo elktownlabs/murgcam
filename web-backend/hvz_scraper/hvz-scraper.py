@@ -11,18 +11,20 @@ import daemon
 import signal
 import sys
 from daemon import pidfile
-import os
 
+sleep_time = 5 * 60
 hvz_url = "https://www.hvz.baden-wuerttemberg.de/js/hvz_peg_stmn.js"
 hvz_wanted_sources = {
   "Schwarzenberg": 79,
   "Schönmünzach": 170,
+  "Bad Rotenfels": 111,
 }
 
 
-def init_logger(logf, detach):
+def init_logger(logf, detach, name="hvz-scraper"):
 
-    logger = logging.getLogger('hvz-scraper')
+    logger = logging.getLogger(name)
+    logger.handlers = []
     logger.setLevel(logging.INFO)
 
     fh = logging.FileHandler(logf)
@@ -38,15 +40,14 @@ def init_logger(logf, detach):
         # create additional logger to console for foreground mode
         ch = logging.StreamHandler(sys.stdout)
         ch.setLevel(logging.INFO)
-        ch.setFormatter(formatter)        
+        ch.setFormatter(formatter)
         logger.addHandler(ch)
 
+    return logger
 
-def do_work(logf, detach):
-    ### This does the "work" of the daemon
-    print("HIHIHI")
-    init_logger(logf, detach)
-    logger = logging.getLogger('hvz-scraper')
+
+def do_work(logf, database, detach):
+    logger = init_logger(logf, detach)
 
     while True:
 
@@ -64,7 +65,7 @@ def do_work(logf, detach):
             logger.info("Successfully minified %s", hvz_url)
             jsonhvzdata = json.loads(hvzdata)
             logger.info("Successfully parsed %s", hvz_url)
-
+            gauge_list = []
             for wantedLine in hvz_wanted_sources:
                 for line in jsonhvzdata:
                     try:
@@ -72,14 +73,33 @@ def do_work(logf, detach):
                         if number == hvz_wanted_sources[wantedLine]:
                             line[9] = line[9].replace("MEZ", "CET")
                             line[9] = line[9].replace("MESZ", "CEST")
+                            if line[8] != "m³/s":
+                                logger.error("Unit of %s should be '%s' but actually is '%s'", wantedLine, "m³/s", line[8])
                             logger.info("Found %s: %s %s at %s", wantedLine, line[7], line[8], line[9])
                             datadate = dateParser.parse(line[9])
-                            datatimestap = time.mktime(datadate.timetuple())
+                            datatimestamp = time.mktime(datadate.timetuple())
+                            gauge_list.append((wantedLine, line[7], datatimestamp))
                             break
                     except ValueError as err:
                         logger.warning("Invalid gauge data: %s", line[0])
                     except Exception as err:
                         logger.warning("Error reading data: %s", err)
+
+
+            # write to database
+            try:
+                dbcon = sqlite3.connect(database)
+                for gauge in gauge_list:
+                    try:
+                        dbcon.execute("INSERT INTO gauge_data (gauge_id, flow, timestamp) VALUES (?, ?, ?)", gauge)
+                    except sqlite3.IntegrityError as err:
+                        logger.info("The value for %s, %s was already inserted", gauge[0], gauge[2])
+                        pass
+                dbcon.commit()
+                dbcon.close()
+                logger.info("Data successfully inserted into database")
+            except sqlite3.Error as err:
+                logger.error("Database error: ",err)
 
         except requests.exceptions.HTTPError as errh:
             logger.error("Http Error: %s",errh)
@@ -88,23 +108,21 @@ def do_work(logf, detach):
         except requests.exceptions.Timeout as errt:
             logger.error("Timeout Error: %s",errt)
         except requests.exceptions.RequestException as err:
-            logger.error("OOps: Something Else %s",err)
+            logger.error("Ops: Something Else %s",err)
         except Exception as err:
             logger.error("Error: %s", err)
-
-
-        logger.info("Sleeping for 10mins")
-        time.sleep(60*10)
+        logger.info("Sleeping for %i secs", sleep_time)
+        time.sleep(sleep_time)
 
 
 def shutdown(signum, frame):  # signum and frame are mandatory
     logger = logging.getLogger('hvz-scraper')
 
-    logger.info("Shutting down due to signal %i.", signal)
+    logger.info("Shutting down due to signal %i.", signum)
     sys.exit(0)
 
 
-def start_daemon(pidf, logf, detach):
+def start_daemon(pidf, logf, database, detach):
     ### This launches the daemon in its context
 
     logger = logging.getLogger('hvz-scraper')
@@ -117,7 +135,7 @@ def start_daemon(pidf, logf, detach):
     else:
         out=sys.stdout
         err=sys.stderr
-    
+
 
     with daemon.DaemonContext(
         working_directory='.',
@@ -131,7 +149,7 @@ def start_daemon(pidf, logf, detach):
             signal.SIGTSTP: shutdown,
             signal.SIGINT: shutdown
         }) as context:
-        do_work(logf, detach)
+        do_work(logf, database, detach)
 
 
 if __name__ == '__main__':
@@ -139,6 +157,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="hvz-scraper")
     parser.add_argument('-p', '--pid-file', default='/var/run/hvz-scraper.pid', help='Pid file')
     parser.add_argument('-l', '--log-file', default='/var/log/hvz-scraper.log', help='Log file')
+    parser.add_argument('-d', '--database', default="/var/run/hvz-scraper/gauges.db", help='sqlite3 database to append values to')
     parser.add_argument('-f', '--foreground', action='store_true', help='Keep daemon in foreground')
     args = parser.parse_args()
 
@@ -146,4 +165,4 @@ if __name__ == '__main__':
     init_logger(logf=args.log_file, detach=not args.foreground)
 
     # finally, start the daemon
-    start_daemon(pidf=args.pid_file, logf=args.log_file, detach=(not args.foreground))
+    start_daemon(pidf=args.pid_file, logf=args.log_file, database=args.database, detach=(not args.foreground))
