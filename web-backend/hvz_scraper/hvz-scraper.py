@@ -68,10 +68,10 @@ def do_work(logf, database, detach):
             logger.info("Successfully parsed %s", hvz_url)
             gauge_list = []
             tzmapping = {
-                'CET': dateutil.tz.gettz('Europe/Berlin'),
-                'MEZ': dateutil.tz.gettz('Europe/Berlin'),
-                'CEST': dateutil.tz.gettz('Europe/Berlin'),
-                'MESZ': dateutil.tz.gettz('Europe/Berlin')}
+                'CET': 3600,
+                'MEZ': 3600,
+                'CEST': 7200,
+                'MESZ': 7200}
 
             for wantedLine in hvz_wanted_sources:
                 for line in jsonhvzdata:
@@ -81,8 +81,8 @@ def do_work(logf, database, detach):
                             if line[8] != "m³/s":
                                 logger.error("Unit of %s should be '%s' but actually is '%s'", wantedLine, "m³/s", line[8])
                             logger.info("Found %s: %s %s at %s", wantedLine, line[7], line[8], line[9])
-                            datadate = dateParser.parse(line[9], tzinfos=tzmapping)
-                            datatimestamp = time.mktime(datadate.timetuple())
+                            datadate = dateParser.parse(line[9], tzinfos=tzmapping, dayfirst=True)
+                            datatimestamp = datadate.timestamp()
                             gauge_list.append((wantedLine, line[7], datatimestamp))
                             break
                     except ValueError as err:
