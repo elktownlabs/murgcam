@@ -8,6 +8,8 @@ import json
 import sqlite3
 import argparse
 import daemon
+import signal
+import sys
 from daemon import pidfile
 import os
 
@@ -17,10 +19,8 @@ hvz_wanted_sources = {
   "Schönmünzach": 170,
 }
 
-debug_p = False
 
-def do_work(logf):
-    ### This does the "work" of the daemon
+def init_logger(logf, detach):
 
     logger = logging.getLogger('hvz-scraper')
     logger.setLevel(logging.INFO)
@@ -32,11 +32,25 @@ def do_work(logf):
     formatter = logging.Formatter(formatstr)
 
     fh.setFormatter(formatter)
-
     logger.addHandler(fh)
+
+    if (not detach):
+        # create additional logger to console for foreground mode
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(formatter)        
+        logger.addHandler(ch)
+
+
+def do_work(logf, detach):
+    ### This does the "work" of the daemon
+    print("HIHIHI")
+    init_logger(logf, detach)
+    logger = logging.getLogger('hvz-scraper')
 
     while True:
 
+        logger.info("Retrieve latest date from HVZ")
 
         try:
             r = requests.get(hvz_url,timeout=3)
@@ -79,37 +93,57 @@ def do_work(logf):
             logger.error("Error: %s", err)
 
 
-
-
         logger.info("Sleeping for 10mins")
         time.sleep(60*10)
 
 
-def start_daemon(pidf, logf):
+def shutdown(signum, frame):  # signum and frame are mandatory
+    logger = logging.getLogger('hvz-scraper')
+
+    logger.info("Shutting down due to signal %i.", signal)
+    sys.exit(0)
+
+
+def start_daemon(pidf, logf, detach):
     ### This launches the daemon in its context
 
-    global debug_p
+    logger = logging.getLogger('hvz-scraper')
+    logger.info("Starting daemon")
 
-    if debug_p:
-        print("eg_daemon: entered run()")
-        print("eg_daemon: pidf = {}    logf = {}".format(pidf, logf))
-        print("eg_daemon: about to start daemonization")
+    # if we're running in the forground, keep stdout/stderr as they are
+    if (detach):
+        out=None
+        err=None
+    else:
+        out=sys.stdout
+        err=sys.stderr
+    
 
-    ### XXX pidfile is a context
     with daemon.DaemonContext(
         working_directory='.',
         umask=0o002,
         pidfile=pidfile.TimeoutPIDLockFile(pidf),
-        ) as context:
-        do_work(logf)
-
-
+        detach_process=detach,
+        stdout=out,
+        stderr=err,
+        signal_map={
+            signal.SIGTERM: shutdown,
+            signal.SIGTSTP: shutdown,
+            signal.SIGINT: shutdown
+        }) as context:
+        do_work(logf, detach)
 
 
 if __name__ == '__main__':
+    # parse arguments
     parser = argparse.ArgumentParser(description="hvz-scraper")
-    parser.add_argument('-p', '--pid-file', default='/var/run/hvz-scraper.pid')
-    parser.add_argument('-l', '--log-file', default='/var/log/hvz-scraper.log')
+    parser.add_argument('-p', '--pid-file', default='/var/run/hvz-scraper.pid', help='Pid file')
+    parser.add_argument('-l', '--log-file', default='/var/log/hvz-scraper.log', help='Log file')
+    parser.add_argument('-f', '--foreground', action='store_true', help='Keep daemon in foreground')
     args = parser.parse_args()
 
-    start_daemon(pidf=args.pid_file, logf=args.log_file)
+    # init logger
+    init_logger(logf=args.log_file, detach=not args.foreground)
+
+    # finally, start the daemon
+    start_daemon(pidf=args.pid_file, logf=args.log_file, detach=(not args.foreground))
