@@ -80,14 +80,14 @@
                 <tr><th class="text-left">Gauge</th><th class="text-left">Time of readout</th><th class="text-right">Flow (cumecs)</th></tr>
               </thead>
               <tbody>
-                <tr><td>Bad Rotenfels</td><td>{{ new Date(gaugeData.flows["Bad Rotenfels"].timestamp * 1000).toLocaleDateString("en-US",  { timeZone: 'Europe/Berlin' }) }}  {{ new Date(gaugeData.flows["Bad Rotenfels"].timestamp * 1000).toLocaleTimeString("en-US",  { timeZone: 'Europe/Berlin' }) }}</td><td class="text-right">{{ gaugeData.flows["Bad Rotenfels"].flow }}</td></tr>
-                <tr><td>Schwarzenberg</td><td>{{ new Date(gaugeData.flows["Schwarzenberg"].timestamp * 1000).toLocaleDateString("en-US",  { timeZone: 'Europe/Berlin' }) }}  {{ new Date(gaugeData.flows["Schwarzenberg"].timestamp * 1000).toLocaleTimeString("en-US",  { timeZone: 'Europe/Berlin' }) }}</td><td class="text-right">{{ gaugeData.flows["Schwarzenberg"].flow }}</td></tr>
-                <tr><td>Schönmünzach</td><td>{{ new Date(gaugeData.flows["Schönmünzach"].timestamp * 1000).toLocaleDateString("en-US",  { timeZone: 'Europe/Berlin' }) }}  {{ new Date(gaugeData.flows["Schönmünzach"].timestamp * 1000).toLocaleTimeString("en-US",  { timeZone: 'Europe/Berlin' }) }}</td><td class="text-right">{{ gaugeData.flows["Schönmünzach"].flow }}</td></tr>
-                <tr><td>Schwarzenberg + Schönmünzach - 20cumecs </td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - 20"].toFixed(2) }}</td></tr>
-                <tr><td>Schwarzenberg + Schönmünzach - 15cumecs </td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - 15"].toFixed(2) }}</td></tr>
-                <tr><td>Schwarzenberg + Schönmünzach - 10cumecs</td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - 10"].toFixed(2) }}</td></tr>
-                <tr><td>Schwarzenberg + Schönmünzach - 5cumecs</td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - 5"].toFixed(2) }}</td></tr>
-                <tr><td>Schwarzenberg + Schönmünzach - No discharge</td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - No discharge"] }}</td></tr>
+                <tr><td>Bad Rotenfels</td><td>{{ displayGaugeTimestamp("Bad Rotenfels") }}</td><td class="text-right">{{ displayGaugeFlow("Bad Rotenfels") }}</td></tr>
+                <tr><td>Schwarzenberg</td><td>{{ displayGaugeTimestamp("Schwarzenberg") }}</td><td class="text-right">{{ displayGaugeFlow("Schwarzenberg") }}</td></tr>
+                <tr><td>Schönmünzach</td><td>{{ displayGaugeTimestamp("Schönmünzach") }}</td><td class="text-right">{{ displayGaugeFlow("Schönmünzach") }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 20cumecs (calculated)</td><td></td><td class="text-right">{{ displayCalculatedFlow("Mittlere - 20") }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 15cumecs (calculated)</td><td></td><td class="text-right">{{ displayCalculatedFlow("Mittlere - 15") }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 10cumecs (calculated)</td><td></td><td class="text-right">{{ displayCalculatedFlow("Mittlere - 10") }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 5cumecs (calculated)</td><td></td><td class="text-right">{{ displayCalculatedFlow("Mittlere - 5") }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - No discharge (calculated)</td><td></td><td class="text-right">{{ displayCalculatedFlow("Mittlere - No discharge") }}</td></tr>
               </tbody>
             </v-simple-table>
           </v-card-text>
@@ -225,7 +225,22 @@
         }
       }
     },
-    methods: {
+    methods: {  
+      displayGaugeFlow: function(gaugeId) {
+        let flow = this.gaugeData?.flows[gaugeId]?.flow
+        return (typeof flow == "number") ? flow.toFixed(2) : "not available"
+      },
+      displayGaugeTimestamp: function(gaugeId) {
+        let timestamp = this.gaugeData?.flows[gaugeId]?.timestamp
+        let timestampDate = (typeof timestamp == "number") ? new Date(timestamp * 1000).toLocaleDateString("en-US",  { timeZone: 'Europe/Berlin' }) : ""
+        let timestampTime = (typeof timestamp == "number") ? new Date(timestamp * 1000).toLocaleTimeString("en-US",  { timeZone: 'Europe/Berlin' }) : ""
+        return (timestampDate + " " + timestampTime).trim()
+
+      },
+      displayCalculatedFlow: function(gaugeId) {
+        let flow = this.gaugeData?.derived_flows[gaugeId]
+        return (typeof flow == "number") ? flow.toFixed(2) : "not available"
+      },
       loadGaugeData: function(timestamp) {
         this.photoData = null
         if (store.getters.isAuthenticated) {
