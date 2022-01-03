@@ -77,15 +77,17 @@
             <h3 class="my-3">Closest HVZ readouts at the time picture was taken</h3>
             <v-simple-table v-if="value != null" dense color="grey lighten-3">
               <thead>
-                <tr><th class="text-left">Gauge</th><th class="text-left">Time of readout</th><th class="text-left">Flow (cumecs)</th></tr>
+                <tr><th class="text-left">Gauge</th><th class="text-left">Time of readout</th><th class="text-right">Flow (cumecs)</th></tr>
               </thead>
               <tbody>
-                <tr><td>Bad Rotenfels</td><td>12</td><td>V</td></tr>
-                <tr><td>Schwarzenberg</td><td>13</td><td>mA</td></tr>
-                <tr><td>Schönmünzach</td><td>14</td><td>V</td></tr>
-                <tr><td>Schwarzenberg + Schönmünzach</td><td>15</td><td>mA</td></tr>
-                <tr><td>Schwarzenberg + Schönmünzach - 20cumecs </td><td>16</td><td>mA</td></tr>
-                <tr><td>Schwarzenberg + Schönmünzach - 10cumecs</td><td>17</td><td>V</td></tr>
+                <tr><td>Bad Rotenfels</td><td>{{ new Date(gaugeData.flows["Bad Rotenfels"].timestamp * 1000).toLocaleDateString("en-US",  { timeZone: 'Europe/Berlin' }) }}  {{ new Date(gaugeData.flows["Bad Rotenfels"].timestamp * 1000).toLocaleTimeString("en-US",  { timeZone: 'Europe/Berlin' }) }}</td><td class="text-right">{{ gaugeData.flows["Bad Rotenfels"].flow }}</td></tr>
+                <tr><td>Schwarzenberg</td><td>{{ new Date(gaugeData.flows["Schwarzenberg"].timestamp * 1000).toLocaleDateString("en-US",  { timeZone: 'Europe/Berlin' }) }}  {{ new Date(gaugeData.flows["Schwarzenberg"].timestamp * 1000).toLocaleTimeString("en-US",  { timeZone: 'Europe/Berlin' }) }}</td><td class="text-right">{{ gaugeData.flows["Schwarzenberg"].flow }}</td></tr>
+                <tr><td>Schönmünzach</td><td>{{ new Date(gaugeData.flows["Schönmünzach"].timestamp * 1000).toLocaleDateString("en-US",  { timeZone: 'Europe/Berlin' }) }}  {{ new Date(gaugeData.flows["Schönmünzach"].timestamp * 1000).toLocaleTimeString("en-US",  { timeZone: 'Europe/Berlin' }) }}</td><td class="text-right">{{ gaugeData.flows["Schönmünzach"].flow }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 20cumecs </td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - 20"].toFixed(2) }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 15cumecs </td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - 15"].toFixed(2) }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 10cumecs</td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - 10"].toFixed(2) }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - 5cumecs</td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - 5"].toFixed(2) }}</td></tr>
+                <tr><td>Schwarzenberg + Schönmünzach - No discharge</td><td></td><td class="text-right">{{ gaugeData.derived_flows["Mittlere - No discharge"] }}</td></tr>
               </tbody>
             </v-simple-table>
           </v-card-text>
@@ -206,22 +208,40 @@
       photoData: null,
       telemetry: null,
       cellProvider: null,
-      cellSite: null
-
+      cellSite: null,
+      gaugeData: null
     }),
     watch: {
       value: function(val) {
         if(val) {
           this.loadPhoto(val.id)
+          this.loadGaugeData(val.timestamp)
         } else {
          this.photoData = null
          this.cellProvider = null
          this.cellSite = null
          this.telemetry = null
+         this.gaugeData = null
         }
       }
     },
     methods: {
+      loadGaugeData: function(timestamp) {
+        this.photoData = null
+        if (store.getters.isAuthenticated) {
+          axios.post(process.env['VUE_APP_BACKENDURL']+'/gauge_info', { token: store.getters.currentToken, timestamp: timestamp }
+        ).then(response => {
+            this.gaugeData = response.data
+          }, (error) => {
+            if (error.response.status == 401) {
+              // session expired
+              this.$store.dispatch(AUTH_LOGOUT).then(() => {
+                this.$router.push({name: 'Login', params: { message: 'Your session expired.'}})
+              }).catch(() => { /* TODO */ });
+            }
+          });
+        }
+      },
       loadPhoto: function(id) {
         this.photoData = null
         if (store.getters.isAuthenticated) {
