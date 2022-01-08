@@ -145,6 +145,13 @@ if ($do_base64) {
 			"longitude" => $row["longitude"]
 		];
 		$data["cell_site"] = $site;
+	} else {
+		$site = [
+			"description" => $row["Unknown"],
+			"latitude" => 0.00,
+			"longitude" => 0.00
+		];
+		$data["cell_site"] = $site;
 	}
 
 	// add photo

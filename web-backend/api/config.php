@@ -3,6 +3,7 @@
 define('DATABASE', '/var/www/webcam/photos/photos.db');
 define('APPDATABASE', '/var/www/webcam/db/app.db');
 define('CELLDATABASE', '/var/www/webcam/db/cell.db');
+define('GAUGEDATABASE', '/var/www/webcam/db/gauges.db');
 define('PHOTODIR', '/var/www/webcam/photos/');
 
 define('CORS', true);

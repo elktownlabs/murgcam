@@ -53,7 +53,7 @@ $resultset = $query->execute();
 $authenticated = false;
 while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
 	$rights = array_map('trim', explode(",", $row["rights"]));
-	if (($row["expiration"] >= time()) && (in_array("del", $rights))) $authenticated = true;
+	if (($row["expiration"] >= time())) $authenticated = true;
 }
 $resultset->finalize();
 $appdb->close();
@@ -84,7 +84,7 @@ if (!is_numeric($timestamp)) {
 $timestamp = intval($timestamp);
 $gauge_results = [];
 foreach ($gauges as &$gauge) {
-	$query=$db->prepare("SELECT gauge_id, timestamp, flow FROM gauge_data WHERE gauge_id=? ORDER BY (?-timestamp) ASC LIMIT 1");
+	$query=$db->prepare("SELECT gauge_id, timestamp, flow FROM gauge_data WHERE gauge_id=? ORDER BY ABS(?-timestamp) ASC LIMIT 1");
 	$query->bindParam(1, $gauge);
 	$query->bindParam(2, $timestamp);
 	$result = $query->execute();
