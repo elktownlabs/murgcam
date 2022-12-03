@@ -136,6 +136,14 @@
                 </div>
               </v-col>
             </v-row>
+            <v-row>
+              <v-col cols="6">
+                <div class="d-flex flex-row">
+                  <v-checkbox v-model="server_parameters['use_daylight']" label="Disregard Fixed Times and Use Sunrise / Sunset" />
+                  <v-btn @click="clear_server_parameter('use_daylight')" class="align-self-center ml-3" color="primary" small>Clear</v-btn>
+                </div>
+              </v-col>
+            </v-row>
           </v-container>
         </v-card>
       </v-tab-item>
@@ -253,6 +261,7 @@ export default {
     server_parameters: {
       "start_time": null,
       "end_time": null,
+      "use_daylight": null,
       "secs_between_photos_override": null
     },
     parameters: {
