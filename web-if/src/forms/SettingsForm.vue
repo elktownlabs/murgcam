@@ -161,7 +161,7 @@
             <v-row>
               <v-col>
                 <div class="d-flex flex-row">
-                  <v-text-field :color="hasChanged('cell_pin') ? 'red' : 'primary'" v-model="parameters['cell_pin'].modifiedValue" :rules="pinRules" label="SIM PIN" />
+                  <v-text-field :color="hasChanged('cell_pin') ? 'red' : 'primary'" v-model="parameters['cell_pin'].modifiedValue" :rules="pinRules" label="SIM PIN (If SIM card has no pin set, use any value as this setting will be ignored.)" />
                   <v-btn @click="revert('cell_pin')" v-if="hasChanged('cell_pin')" class="align-self-center ml-3" small color="red" dark>Revert</v-btn>
                 </div>
               </v-col>
