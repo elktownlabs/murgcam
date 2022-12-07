@@ -1,16 +1,19 @@
 <?php
 
+
 require("config.php");
 require("imghelpers.php");
+
 
 date_default_timezone_set("UTC");
 setlocale(LC_ALL, '');
 
-function __autoload($class)
+function webcam_autoloader($class)
 {
     $parts = explode('\\', $class);
     require implode('/', $parts) . '.php';
 }
+spl_autoload_register('webcam_autoloader');
 
 use lsolesen\pel\Pel;
 use lsolesen\pel\PelConvert;
@@ -24,6 +27,7 @@ use lsolesen\pel\PelIfd;
 use lsolesen\pel\PelJpeg;
 use lsolesen\pel\PelTag;
 use lsolesen\pel\PelTiff;
+
 
 openlog("webcam-uploader", LOG_PID | LOG_PERROR, LOG_LOCAL0);
 syslog(LOG_NOTICE, "upload initiated");
@@ -66,6 +70,7 @@ if (!is_dir(PHOTODIR)) {
 	return;
 }
 
+
 $photo_uniqueid = uniqid('cam_');
 $target_filename =  $photo_uniqueid . ".jpg";
 $upload_timestamp = new DateTime('now');
@@ -82,6 +87,7 @@ if (!array_key_exists("photo",  $_FILES)) {
 	closelog();
 	return;
 }
+
 
 // check for upload errors
 if ($_FILES["photo"]["error"] != UPLOAD_ERR_OK) {
@@ -458,3 +464,5 @@ print(json_encode($config_to_send, JSON_FORCE_OBJECT));
 $db->close();
 $appdb->close();
 closelog();
+
+?>
