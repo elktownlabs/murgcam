@@ -211,7 +211,7 @@ static esp_err_t sim800_handle_waitregistration(modem_dce_t *dce, const char *li
         err = esp_modem_process_command_done(dce, MODEM_STATE_FAIL);
     } else if (!strncmp(line, "+CREG: ", strlen("+CREG: "))) {
         int value = line[9] - '0';
-        if (value ==1) {
+        if ((value ==1) || (value == 5)) {
             dce->registered = 1;
         }
         err = ESP_OK;
