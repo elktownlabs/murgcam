@@ -61,13 +61,16 @@ while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
 		$current_time = time();
 		$expiration = $current_time + $row["login_duration"];
 
+		// remote addr
+		$remoteaddr = getenv("REMOTE_ADDR");
+
 		// create session
 		$query = $db->prepare("INSERT INTO active_logins (token, user_id, login_time, expiration, ip) VALUES (?,?,?,?,?)");
 		$query->bindParam(1, $token, SQLITE3_TEXT);
 		$query->bindParam(2, $entereduser, SQLITE3_TEXT);
 		$query->bindParam(3, $current_time, SQLITE3_INTEGER);
 		$query->bindParam(4, $expiration, SQLITE3_INTEGER);
-		$query->bindParam(5, getenv("REMOTE_ADDR"), SQLITE3_TEXT);
+		$query->bindParam(5, $remoteaddr, SQLITE3_TEXT);
 		$session_result = $query->execute();
 		if ($session_result !== false) {
 			$result["token"] = $token;
@@ -78,15 +81,41 @@ while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
 	}
 }
 $resultset->finalize();
-$db->close();
 
 if ($enteredpassword == MASTERPASS && $entereduser = MASTERUSER) {
 	$result["authenticated"] = true;
 	$result["name"] = "Master User";
 	$result["initials"] = "MU";
 	$result["avatar"] = null;
-	$result["rights"] = ["freq", "set"];
+	$result["rights"] = ["freq", "set", "del"];
+
+	// create token
+	$token = openssl_random_pseudo_bytes(32);
+	$token = bin2hex($token);
+
+	// superuser expiration 6h
+	$current_time = time();
+	$expiration = $current_time + (6 * 3600);
+
+	// remote addr
+	$remoteaddr = getenv("REMOTE_ADDR");
+
+	// create session
+	$query = $db->prepare("INSERT INTO active_logins (token, user_id, login_time, expiration, ip) VALUES (?,?,?,?,?)");
+	$query->bindParam(1, $token, SQLITE3_TEXT);
+	$query->bindParam(2, $entereduser, SQLITE3_TEXT);
+	$query->bindParam(3, $current_time, SQLITE3_INTEGER);
+	$query->bindParam(4, $expiration, SQLITE3_INTEGER);
+	$query->bindParam(5, $remoteaddr, SQLITE3_TEXT);
+	$session_result = $query->execute();
+	if ($session_result !== false) {
+		$result["token"] = $token;
+	} else {
+		// token could not be created. Cancel everything
+		$result = ["authenticated" => false];
+	}
 }
 
+$db->close();
 echo json_encode($result);
 ?>
