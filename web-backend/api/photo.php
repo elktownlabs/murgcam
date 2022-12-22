@@ -1,6 +1,6 @@
 <?php
-
-require("config.php");
+require_once("config.php");
+require_once("common.php");
 
 if (CORS) {
         header('Access-Control-Allow-Origin: *');
@@ -34,17 +34,10 @@ if (!array_key_exists("token", $data)) {
     header('HTTP/1.0 401 Unauthorized');
 	return;
 }
-$query = $appdb->prepare("SELECT expiration FROM active_logins WHERE token=? LIMIT 1");
-$query->bindParam(1, $data["token"], SQLITE3_TEXT);
-$resultset = $query->execute();
-$authenticated = false;
-while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
-	if ($row["expiration"] >= time()) $authenticated = true;
-}
-$resultset->finalize();
-$appdb->close();
+$authenticated = murgcam_authenticate($appdb, $data["token"]);
 if (!$authenticated) {
 	header('HTTP/1.0 401 Unauthorized');
+        $appdb->close();
 	return;
 }
 

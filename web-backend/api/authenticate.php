@@ -82,7 +82,7 @@ while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
 }
 $resultset->finalize();
 
-if ($enteredpassword == MASTERPASS && $entereduser = MASTERUSER) {
+if (($enteredpassword == MASTERPASS) && ($entereduser == MASTERUSER)) {
 	$result["authenticated"] = true;
 	$result["name"] = "Master User";
 	$result["initials"] = "MU";

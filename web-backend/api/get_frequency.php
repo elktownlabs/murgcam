@@ -1,6 +1,6 @@
 <?php
-
-require("config.php");
+require_once("config.php");
+require_once("common.php");
 
 function unix2iso($input)
 {
@@ -41,20 +41,14 @@ if (!array_key_exists("token", $data)) {
         header('HTTP/1.0 401 Unauthorized');
         return;
 }
-$query = $appdb->prepare("SELECT s.expiration as expiration, u.rights as rights FROM active_logins s, users u WHERE u.id=s.user_id AND token=? LIMIT 1;");
-$query->bindParam(1, $data["token"], SQLITE3_TEXT);
-$resultset = $query->execute();
-$authenticated = false;
-while($row = $resultset->fetchArray(SQLITE3_ASSOC)) {
-    $rights = array_map('trim', explode(",", $row["rights"]));
-	if (($row["expiration"] >= time()) && (in_array("freq", $rights))) $authenticated = true;
-}
-$resultset->finalize();
+
+$authenticated = murgcam_authenticate($appdb, $data["token"], "freq");
 if (!$authenticated) {
 	header('HTTP/1.0 401 Unauthorized');
         $appdb->close();
 	return;
 }
+
 
 
 $result = $appdb->querySingle("SELECT current_mode, current_mode_start, current_mode_end, current_mode_initiating_user, current_mode_initiating_time, requested_mode, requested_mode_end, requested_mode_initiating_time, requested_mode_initiating_user FROM cam_frequency WHERE cam_id = 1", true);
