@@ -324,8 +324,8 @@ if ($result !== false) {
 		$config_to_send["sys_secs_between_photos_transient"] = $val;
 	}
 
-	// figure out if we are in time out (after last photo of the day before first photo of the next day
-	if (!$transient_secs_determined) {
+	// figure out if we are in time out for fixed mode (after last photo of the day and before first photo of the next day)
+	if ((!$transient_secs_determined) && ($server_config["timing_strategy"] != "sunlight")) {
 		$current_time = new DateTime("now", new DateTimeZone("Europe/Berlin"));
 		$start_time = DateTime::createFromFormat("H:i", $server_config["start_time"], new DateTimeZone("Europe/Berlin"));
 		$end_time = DateTime::createFromFormat("H:i", $server_config["end_time"], new DateTimeZone("Europe/Berlin"));
@@ -347,7 +347,43 @@ if ($result !== false) {
 				}
 
 				// if we are within 10mins of the interval start, assume that this is the first picture
-				// of the interval which came a early due to clock drift.
+				// of the interval which came a bit early due to clock drift.
+				if ($interval >= 10*60) {
+					$config_to_send["sys_secs_between_photos_transient"] = $interval;
+					$transient_secs_determined = true;
+				}
+			}
+		}
+	}
+
+	// figure out if we are in time out for sunlight mode (after last photo of the day and before first photo of the next day)
+	if ((!$transient_secs_determined) && ($server_config["timing_strategy"] == "sunlight")) {
+		$debug=[];
+		// determine sunrise and sunset
+		$current_time = (new DateTime("now", new DateTimeZone("Europe/Berlin")))->getTimestamp();
+		$latitude = floatval($server_config["latitude"]);
+		$longitude = floatval($server_config["longitude"]);
+		$debug["latitude"] = $latitude;
+		$debug["longitude"] = $longitude;
+		$sun_info = date_sun_info($current_time, $latitude, $longitude);
+		$start_time = $sun_info["sunrise"];
+		$start_time += intval($server_config["offset_firstphoto"]);
+		$end_time = $sun_info["sunset"];
+		$end_time += intval($server_config["offset_lastphoto"]);
+		if ($start_time > $end_time) $end_time+=86400; // end of interval is on next day
+		$debug["start"] = $start_time;
+		$debug["end"] = $end_time;
+		if ($start_time !== null && $end_time !== null) {
+			$active = ($current_time >= $start_time) && ($current_time <= $end_time);
+			if (!$active) {
+				$interval = $start_time - $current_time;
+				if ($interval < 0) {
+					$start_time+=86400;
+					$interval = $start_time - $current_time;
+				}
+
+				// if we are within 10mins of the interval start, assume that this is the first picture
+				// of the interval which came a bit early due to clock drift.
 				if ($interval >= 10*60) {
 					$config_to_send["sys_secs_between_photos_transient"] = $interval;
 					$transient_secs_determined = true;
@@ -460,6 +496,7 @@ if (!$transient_secs_determined) {
 
 
 header('Content-type:application/json;charset=utf-8');
+$config_to_send["debug"] = $debug;
 print(json_encode($config_to_send, JSON_FORCE_OBJECT));
 $db->close();
 $appdb->close();
