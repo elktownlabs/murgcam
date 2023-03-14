@@ -212,9 +212,26 @@ if(isset($_GET['current'])) {
 
 if(isset($_GET['refphoto'])) {
     $reflabel = $_GET['refphoto'];
-    header('Content-Type: image/jpeg');
-    header('Content-Disposition: inline');
-    print(file_get_contents("testcard.jpg"));
+    switch ($reflabel) {
+    case 'min':
+        header('Content-Type: image/jpeg');
+        header('Content-Disposition: inline');
+        print(file_get_contents("../refphotos/low.jpeg"));
+        break;
+    case 'med':
+        header('Content-Type: image/jpeg');
+        header('Content-Disposition: inline');
+        print(file_get_contents("../refphotos/medium.jpeg"));
+        break;
+    case 'max':
+        header('Content-Type: image/jpeg');
+        header('Content-Disposition: inline');
+        print(file_get_contents("../refphotos/high.jpeg"));
+	break;
+    default:
+	header("HTTP/1.0 404 Not Found");
+        echo "This photo does not exist.";
+    }
     exit(0);
   }
 
